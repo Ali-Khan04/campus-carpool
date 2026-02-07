@@ -1,38 +1,18 @@
-import { View, Text, StyleSheet, Pressable } from "react-native";
-import { COLORS, SPACING, FONT_SIZES } from "@/constants/theme";
+// dummy index as a placeholder while we check auth state in _layout.tsx
+import { View, ActivityIndicator } from "react-native";
+import { COLORS } from "@/constants/theme";
 
-import { router } from "expo-router";
-
-export default function SignInIndex() {
+export default function Index() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>CarPool</Text>
-      <Pressable onPress={() => router.replace("/(tabs)")}>
-        <Text style={styles.subtitle}>
-          Sign in or create an account to continue
-        </Text>
-      </Pressable>
+    <View
+      style={{
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: COLORS.background,
+      }}
+    >
+      <ActivityIndicator size="large" color={COLORS.primary} />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: SPACING.lg,
-  },
-  title: {
-    fontSize: FONT_SIZES.xl,
-    fontWeight: "700",
-    color: COLORS.primary,
-    marginBottom: SPACING.sm,
-  },
-  subtitle: {
-    fontSize: FONT_SIZES.md,
-    color: COLORS.textSecondary,
-    textAlign: "center",
-  },
-});
