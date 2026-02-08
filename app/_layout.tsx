@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Stack, router, useSegments } from "expo-router";
 import { supabase } from "@/lib/supabase";
+import { ProfileProvider } from "@/context/ProfileProvider";
 
 export default function StackNavigation() {
   const segments = useSegments();
@@ -39,10 +40,12 @@ export default function StackNavigation() {
   }, [initializing, segments]);
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="index" />
-      <Stack.Screen name="(auth)" />
-      <Stack.Screen name="(tabs)" />
-    </Stack>
+    <ProfileProvider>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(tabs)" />
+      </Stack>
+    </ProfileProvider>
   );
 }
