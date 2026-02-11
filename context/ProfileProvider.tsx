@@ -4,28 +4,33 @@ import { Session } from "@supabase/supabase-js";
 import { DriverProfile, Profile } from "@/types/Profiles";
 import { supabase } from "@/lib/supabase";
 
-interface AuthState {
+interface ProfileState {
   profile: Profile | null;
   driverProfile: DriverProfile | null;
   session: Session | null;
   loading: boolean;
 }
 
-type AuthAction =
+export type ProfileAction =
   | { type: "SET_PROFILE"; payload: Profile | null }
   | { type: "SET_DRIVER_PROFILE"; payload: DriverProfile | null }
   | { type: "SET_SESSION"; payload: Session | null }
   | { type: "SET_LOADING"; payload: boolean }
-  | { type: "RESET" };
+  | { type: "RESET" }
+  | { type: "UPDATE_PROFILE"; payload: Partial<Profile> }
+  | { type: "UPDATE_DRIVER_PROFILE"; payload: Partial<DriverProfile> };
 
-const initialState: AuthState = {
+const initialState: ProfileState = {
   profile: null,
   driverProfile: null,
   session: null,
   loading: true,
 };
 
-function profileReducer(state: AuthState, action: AuthAction): AuthState {
+function profileReducer(
+  state: ProfileState,
+  action: ProfileAction,
+): ProfileState {
   switch (action.type) {
     case "SET_PROFILE":
       return { ...state, profile: action.payload };
@@ -37,6 +42,21 @@ function profileReducer(state: AuthState, action: AuthAction): AuthState {
       return { ...state, loading: action.payload };
     case "RESET":
       return { ...initialState, loading: false };
+    case "UPDATE_PROFILE":
+      return {
+        ...state,
+        profile: state.profile
+          ? { ...state.profile, ...action.payload }
+          : state.profile,
+      };
+    case "UPDATE_DRIVER_PROFILE":
+      return {
+        ...state,
+        driverProfile: state.driverProfile
+          ? { ...state.driverProfile, ...action.payload }
+          : state.driverProfile,
+      };
+
     default:
       return state;
   }
@@ -55,10 +75,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         .select("*")
         .eq("id", userId)
         .maybeSingle();
-
-      console.log("Profile data:", profileData);
-      console.log("Profile error:", profileError);
-
       if (profileError) {
         console.error("Profile error:", profileError);
         dispatch({ type: "SET_PROFILE", payload: null });
@@ -72,10 +88,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         .select("*")
         .eq("id", userId)
         .maybeSingle();
-
-      console.log("Driver data:", driverData);
-      console.log("Driver error:", driverError);
-
       if (driverError) {
         console.error("Driver profile error:", driverError);
         dispatch({ type: "SET_DRIVER_PROFILE", payload: null });
@@ -128,6 +140,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         session: state.session,
         loading: state.loading,
         isDriver: !!state.driverProfile,
+        dispatch,
       }}
     >
       {children}

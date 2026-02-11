@@ -1,9 +1,57 @@
-import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  TextInput,
+  Pressable,
+} from "react-native";
 import { COLORS, SPACING, FONT_SIZES } from "@/constants/theme";
 import { useProfile } from "@/hooks/ProfileContextHook";
+import { useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function StudentProfile() {
-  const { profile, loading } = useProfile();
+  const { profile, loading, dispatch } = useProfile();
+  const [profileData, setProfileData] = useState({
+    full_name: profile?.full_name ?? "",
+    university_name: profile?.university_name ?? "",
+    phone: profile?.phone ?? "",
+  });
+
+  const [editing, setEditing] = useState<boolean>(false);
+  const handleProfileData = (field: string, value: string) => {
+    setProfileData((prev) => ({ ...prev, [field]: value }));
+  };
+  //update profile function
+  const handleSubmit = async () => {
+    if (!profile) return;
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        full_name: profileData.full_name,
+        university_name: profileData.university_name,
+        phone: profileData.phone,
+      })
+      .eq("id", profile.id);
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    dispatch({
+      type: "UPDATE_PROFILE",
+      payload: {
+        full_name: profileData.full_name,
+        university_name: profileData.university_name,
+        phone: profileData.phone,
+      },
+    });
+
+    setEditing(false);
+  };
 
   if (loading) {
     return (
@@ -22,32 +70,91 @@ export default function StudentProfile() {
     );
   }
 
-  return (
-    <View style={styles.card}>
-      <Text style={styles.heading}>Student Profile</Text>
+  return editing ? (
+    <View style={styles.editCard}>
+      <TextInput
+        style={[styles.input, styles.inputFirst]}
+        value={profileData.full_name}
+        onChangeText={(userInput) => handleProfileData("full_name", userInput)}
+        placeholder="Full name"
+        placeholderTextColor={COLORS.textSecondary}
+      />
 
-      <Text style={styles.label}>Email</Text>
-      <Text style={styles.value}>{profile.email}</Text>
+      <TextInput
+        style={styles.input}
+        value={profileData.university_name}
+        onChangeText={(userInput) =>
+          handleProfileData("university_name", userInput)
+        }
+        placeholder="University"
+        placeholderTextColor={COLORS.textSecondary}
+      />
 
-      <Text style={styles.label}>Name</Text>
-      <Text style={[styles.value, !profile.full_name && styles.placeholder]}>
-        {profile.full_name ? profile.full_name : "Tap to add your name"}
-      </Text>
+      <TextInput
+        style={styles.input}
+        value={profileData.phone}
+        onChangeText={(userInput) => handleProfileData("phone", userInput)}
+        placeholder="Phone"
+        placeholderTextColor={COLORS.textSecondary}
+        keyboardType="phone-pad"
+      />
+      <View style={styles.buttonRow}>
+        <Pressable
+          style={styles.cancelBtn}
+          onPress={() => {
+            setProfileData({
+              full_name: profile?.full_name ?? "",
+              university_name: profile?.university_name ?? "",
+              phone: profile?.phone ?? "",
+            });
+            setEditing(false);
+          }}
+        >
+          <Text style={styles.cancelText}>Cancel</Text>
+        </Pressable>
 
-      <Text style={styles.label}>University</Text>
-      <Text
-        style={[styles.value, !profile.university_name && styles.placeholder]}
-      >
-        {profile.university_name
-          ? profile.university_name
-          : "Tap to add your university"}
-      </Text>
-
-      <Text style={styles.label}>Phone</Text>
-      <Text style={[styles.value, !profile.phone && styles.placeholder]}>
-        {profile.phone ? profile.phone : "Tap to add your phone number"}
-      </Text>
+        <Pressable style={styles.saveBtn} onPress={handleSubmit}>
+          <Text style={styles.saveText}>Save</Text>
+        </Pressable>
+      </View>
     </View>
+  ) : (
+    <Pressable
+      onPress={() => {
+        setProfileData({
+          full_name: profile?.full_name ?? "",
+          university_name: profile?.university_name ?? "",
+          phone: profile?.phone ?? "",
+        });
+        setEditing(true);
+      }}
+    >
+      <View style={styles.card}>
+        <Text style={styles.heading}>Student Profile</Text>
+
+        <Text style={styles.label}>Email</Text>
+        <Text style={styles.value}>{profile.email}</Text>
+
+        <Text style={styles.label}>Name</Text>
+        <Text style={[styles.value, !profile.full_name && styles.placeholder]}>
+          {profile.full_name ? profile.full_name : "Tap to add your name"}
+        </Text>
+
+        <Text style={styles.label}>University</Text>
+        <Text
+          style={[styles.value, !profile.university_name && styles.placeholder]}
+        >
+          {profile.university_name
+            ? profile.university_name
+            : "Tap to add your university"}
+        </Text>
+
+        <Text style={styles.label}>Phone</Text>
+        <Text style={[styles.value, !profile.phone && styles.placeholder]}>
+          {profile.phone ? profile.phone : "Tap to add your phone number"}
+        </Text>
+      </View>
+    </Pressable>
   );
 }
 const styles = StyleSheet.create({
@@ -76,5 +183,59 @@ const styles = StyleSheet.create({
   placeholder: {
     color: COLORS.textSecondary,
     fontStyle: "italic",
+  },
+  editCard: {
+    backgroundColor: COLORS.white,
+    margin: SPACING.md,
+    padding: SPACING.lg,
+    borderRadius: 12,
+  },
+
+  input: {
+    fontSize: FONT_SIZES.md,
+    color: COLORS.textPrimary,
+    borderWidth: 1,
+    borderColor: COLORS.textSecondary,
+    borderRadius: 10,
+    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.md,
+    marginTop: SPACING.sm,
+  },
+
+  inputFirst: {
+    marginTop: 0,
+  },
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: SPACING.sm,
+    marginTop: SPACING.md,
+  },
+
+  cancelBtn: {
+    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.lg,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: COLORS.textSecondary,
+  },
+
+  cancelText: {
+    fontSize: FONT_SIZES.md,
+    color: COLORS.textSecondary,
+    fontWeight: "600",
+  },
+
+  saveBtn: {
+    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.lg,
+    borderRadius: 10,
+    backgroundColor: COLORS.textPrimary,
+  },
+
+  saveText: {
+    fontSize: FONT_SIZES.md,
+    color: COLORS.white,
+    fontWeight: "600",
   },
 });
