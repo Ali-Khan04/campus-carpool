@@ -5,28 +5,65 @@ import {
   ActivityIndicator,
   TextInput,
   Pressable,
+  Alert,
 } from "react-native";
 import { COLORS, SPACING, FONT_SIZES } from "@/constants/theme";
 import { useProfile } from "@/hooks/ProfileContextHook";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+
+// Helper function to clean NULL bug from supabase
+const cleanValue = (value: string | null | undefined): string => {
+  if (!value || value === "NULL" || value === "null") {
+    return "";
+  }
+  return value;
+};
 
 export default function StudentProfile() {
   const { profile, loading, dispatch } = useProfile();
   const [profileData, setProfileData] = useState({
-    full_name: profile?.full_name ?? "",
-    university_name: profile?.university_name ?? "",
-    phone: profile?.phone ?? "",
+    full_name: cleanValue(profile?.full_name),
+    university_name: cleanValue(profile?.university_name),
+    phone: cleanValue(profile?.phone),
   });
 
   const [editing, setEditing] = useState<boolean>(false);
+
+  // Update state when profile changes with clean values without NULL bug
+  useEffect(() => {
+    if (profile) {
+      setProfileData({
+        full_name: cleanValue(profile.full_name),
+        university_name: cleanValue(profile.university_name),
+        phone: cleanValue(profile.phone),
+      });
+    }
+  }, [profile]);
+
   const handleProfileData = (field: string, value: string) => {
     setProfileData((prev) => ({ ...prev, [field]: value }));
   };
-  //update profile function
+
+  // Update profile function
   const handleSubmit = async () => {
     if (!profile) return;
+    const { full_name, university_name, phone } = profileData;
 
+    if (
+      !full_name ||
+      !university_name ||
+      !phone ||
+      full_name.trim() === "" ||
+      university_name.trim() === "" ||
+      phone.trim() === ""
+    ) {
+      Alert.alert(
+        "Incomplete Information",
+        "Please fill in all the fields before continuing.",
+      );
+      return;
+    }
     const { error } = await supabase
       .from("profiles")
       .update({
@@ -38,6 +75,7 @@ export default function StudentProfile() {
 
     if (error) {
       console.error(error);
+      Alert.alert("Error", "Failed to update profile. Please try again.");
       return;
     }
 
@@ -50,6 +88,7 @@ export default function StudentProfile() {
       },
     });
 
+    Alert.alert("Success", "Your profile has been updated.");
     setEditing(false);
   };
 
@@ -103,9 +142,9 @@ export default function StudentProfile() {
           style={styles.cancelBtn}
           onPress={() => {
             setProfileData({
-              full_name: profile?.full_name ?? "",
-              university_name: profile?.university_name ?? "",
-              phone: profile?.phone ?? "",
+              full_name: cleanValue(profile?.full_name),
+              university_name: cleanValue(profile?.university_name),
+              phone: cleanValue(profile?.phone),
             });
             setEditing(false);
           }}
@@ -122,9 +161,9 @@ export default function StudentProfile() {
     <Pressable
       onPress={() => {
         setProfileData({
-          full_name: profile?.full_name ?? "",
-          university_name: profile?.university_name ?? "",
-          phone: profile?.phone ?? "",
+          full_name: cleanValue(profile?.full_name),
+          university_name: cleanValue(profile?.university_name),
+          phone: cleanValue(profile?.phone),
         });
         setEditing(true);
       }}
@@ -136,27 +175,39 @@ export default function StudentProfile() {
         <Text style={styles.value}>{profile.email}</Text>
 
         <Text style={styles.label}>Name</Text>
-        <Text style={[styles.value, !profile.full_name && styles.placeholder]}>
-          {profile.full_name ? profile.full_name : "Tap to add your name"}
+        <Text
+          style={[
+            styles.value,
+            !cleanValue(profile?.full_name) && styles.placeholder,
+          ]}
+        >
+          {cleanValue(profile?.full_name) || "Tap to add your name"}
         </Text>
 
         <Text style={styles.label}>University</Text>
         <Text
-          style={[styles.value, !profile.university_name && styles.placeholder]}
+          style={[
+            styles.value,
+            !cleanValue(profile?.university_name) && styles.placeholder,
+          ]}
         >
-          {profile.university_name
-            ? profile.university_name
-            : "Tap to add your university"}
+          {cleanValue(profile?.university_name) || "Tap to add your university"}
         </Text>
 
         <Text style={styles.label}>Phone</Text>
-        <Text style={[styles.value, !profile.phone && styles.placeholder]}>
-          {profile.phone ? profile.phone : "Tap to add your phone number"}
+        <Text
+          style={[
+            styles.value,
+            !cleanValue(profile?.phone) && styles.placeholder,
+          ]}
+        >
+          {cleanValue(profile?.phone) || "Tap to add your phone number"}
         </Text>
       </View>
     </Pressable>
   );
 }
+
 const styles = StyleSheet.create({
   card: {
     backgroundColor: COLORS.white,

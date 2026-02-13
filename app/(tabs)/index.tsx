@@ -2,8 +2,33 @@ import { View, Text, StyleSheet, Pressable, Alert } from "react-native";
 import { COLORS, SPACING, FONT_SIZES } from "@/constants/theme";
 import { supabase } from "@/lib/supabase";
 import { router } from "expo-router";
+import { useProfile } from "@/hooks/ProfileContextHook";
 
 export default function TabsHomeScreen() {
+  const { profile } = useProfile();
+
+  //stop user from starting carpool if profile is incomplete
+  const handleStartCarpool = () => {
+    if (!profile?.full_name || !profile?.university_name || !profile?.phone) {
+      Alert.alert(
+        "Complete Your Student Profile",
+        "Please complete your profile before starting a carpool.",
+        [
+          {
+            text: "Complete Profile",
+            onPress: () => router.push("/(tabs)/profiles"),
+          },
+          {
+            text: "Cancel",
+            style: "cancel",
+          },
+        ],
+      );
+      return;
+    }
+    router.push("./map");
+  };
+
   const handleLogout = async () => {
     Alert.alert("Logout", "Are you sure you want to logout?", [
       {
@@ -33,7 +58,7 @@ export default function TabsHomeScreen() {
 
       <Text style={styles.title}>Ready to go?</Text>
       <Text style={styles.subtitle}>start a carpool in just one tap</Text>
-      <Pressable style={styles.ctaButton} onPress={() => router.push("./map")}>
+      <Pressable style={styles.ctaButton} onPress={handleStartCarpool}>
         <Text style={styles.ctaText}>Start CarPool</Text>
       </Pressable>
     </View>
