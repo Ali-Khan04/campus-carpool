@@ -31,6 +31,7 @@ export default function TabsNavigation() {
       />
       <Tabs.Screen name="profiles/studentProfile" options={{ href: null }} />
       <Tabs.Screen name="profiles/driverProfile" options={{ href: null }} />
+      <Tabs.Screen name="map" options={{ href: null }} />
     </Tabs>
   );
 }

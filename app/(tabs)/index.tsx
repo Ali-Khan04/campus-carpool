@@ -33,7 +33,7 @@ export default function TabsHomeScreen() {
 
       <Text style={styles.title}>Ready to go?</Text>
       <Text style={styles.subtitle}>start a carpool in just one tap</Text>
-      <Pressable style={styles.ctaButton}>
+      <Pressable style={styles.ctaButton} onPress={() => router.push("./map")}>
         <Text style={styles.ctaText}>Start CarPool</Text>
       </Pressable>
     </View>
