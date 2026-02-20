@@ -1,27 +1,18 @@
-import {
-  View,
-  Text,
-  StyleSheet,
-  ActivityIndicator,
-  TextInput,
-  Pressable,
-  Alert,
-} from "react-native";
-import { COLORS, SPACING, FONT_SIZES } from "@/constants/theme";
-import { useProfile } from "@/hooks/ProfileContextHook";
+import { View, ActivityIndicator } from "react-native";
 import { useState, useEffect } from "react";
+import { COLORS } from "@/constants/theme";
+import { useProfile } from "@/hooks/ProfileContextHook";
 import { supabase } from "@/lib/supabase";
-
-// Helper function to clean NULL bug from supabase
-const cleanValue = (value: string | null | undefined): string => {
-  if (!value || value === "NULL" || value === "null") {
-    return "";
-  }
-  return value;
-};
+import { Alert } from "react-native";
+import { studentProfileStyles as styles } from "@/styles/studentProfileStyles";
+import StudentProfileEmpty from "@/components/student/StudentProfileEmpty";
+import StudentProfileView from "@/components/student/StudentProfileView";
+import StudentProfileForm from "@/components/student/StudentProfileForm";
+import { cleanValue } from "@/utils/cleanValue";
 
 export default function StudentProfile() {
   const { profile, loading, dispatch } = useProfile();
+
   const [profileData, setProfileData] = useState({
     full_name: cleanValue(profile?.full_name),
     university_name: cleanValue(profile?.university_name),
@@ -64,6 +55,7 @@ export default function StudentProfile() {
       );
       return;
     }
+
     const { error } = await supabase
       .from("profiles")
       .update({
@@ -92,6 +84,24 @@ export default function StudentProfile() {
     setEditing(false);
   };
 
+  const handleCancel = () => {
+    setProfileData({
+      full_name: cleanValue(profile?.full_name),
+      university_name: cleanValue(profile?.university_name),
+      phone: cleanValue(profile?.phone),
+    });
+    setEditing(false);
+  };
+
+  const handleEditPress = () => {
+    setProfileData({
+      full_name: cleanValue(profile?.full_name),
+      university_name: cleanValue(profile?.university_name),
+      phone: cleanValue(profile?.phone),
+    });
+    setEditing(true);
+  };
+
   if (loading) {
     return (
       <View style={styles.card}>
@@ -100,193 +110,18 @@ export default function StudentProfile() {
     );
   }
 
-  if (!profile) {
+  if (!profile) return <StudentProfileEmpty />;
+
+  if (editing) {
     return (
-      <View style={styles.card}>
-        <Text style={styles.heading}>No Profile Found</Text>
-        <Text style={styles.label}>Please sign in to view your profile</Text>
-      </View>
+      <StudentProfileForm
+        formData={profileData}
+        onChange={handleProfileData}
+        onSave={handleSubmit}
+        onCancel={handleCancel}
+      />
     );
   }
 
-  return editing ? (
-    <View style={styles.editCard}>
-      <TextInput
-        style={[styles.input, styles.inputFirst]}
-        value={profileData.full_name}
-        onChangeText={(userInput) => handleProfileData("full_name", userInput)}
-        placeholder="Full name"
-        placeholderTextColor={COLORS.textSecondary}
-      />
-
-      <TextInput
-        style={styles.input}
-        value={profileData.university_name}
-        onChangeText={(userInput) =>
-          handleProfileData("university_name", userInput)
-        }
-        placeholder="University"
-        placeholderTextColor={COLORS.textSecondary}
-      />
-
-      <TextInput
-        style={styles.input}
-        value={profileData.phone}
-        onChangeText={(userInput) => handleProfileData("phone", userInput)}
-        placeholder="Phone"
-        placeholderTextColor={COLORS.textSecondary}
-        keyboardType="phone-pad"
-      />
-      <View style={styles.buttonRow}>
-        <Pressable
-          style={styles.cancelBtn}
-          onPress={() => {
-            setProfileData({
-              full_name: cleanValue(profile?.full_name),
-              university_name: cleanValue(profile?.university_name),
-              phone: cleanValue(profile?.phone),
-            });
-            setEditing(false);
-          }}
-        >
-          <Text style={styles.cancelText}>Cancel</Text>
-        </Pressable>
-
-        <Pressable style={styles.saveBtn} onPress={handleSubmit}>
-          <Text style={styles.saveText}>Save</Text>
-        </Pressable>
-      </View>
-    </View>
-  ) : (
-    <Pressable
-      onPress={() => {
-        setProfileData({
-          full_name: cleanValue(profile?.full_name),
-          university_name: cleanValue(profile?.university_name),
-          phone: cleanValue(profile?.phone),
-        });
-        setEditing(true);
-      }}
-    >
-      <View style={styles.card}>
-        <Text style={styles.heading}>Student Profile</Text>
-
-        <Text style={styles.label}>Email</Text>
-        <Text style={styles.value}>{profile.email}</Text>
-
-        <Text style={styles.label}>Name</Text>
-        <Text
-          style={[
-            styles.value,
-            !cleanValue(profile?.full_name) && styles.placeholder,
-          ]}
-        >
-          {cleanValue(profile?.full_name) || "Tap to add your name"}
-        </Text>
-
-        <Text style={styles.label}>University</Text>
-        <Text
-          style={[
-            styles.value,
-            !cleanValue(profile?.university_name) && styles.placeholder,
-          ]}
-        >
-          {cleanValue(profile?.university_name) || "Tap to add your university"}
-        </Text>
-
-        <Text style={styles.label}>Phone</Text>
-        <Text
-          style={[
-            styles.value,
-            !cleanValue(profile?.phone) && styles.placeholder,
-          ]}
-        >
-          {cleanValue(profile?.phone) || "Tap to add your phone number"}
-        </Text>
-      </View>
-    </Pressable>
-  );
+  return <StudentProfileView profile={profile} onEdit={handleEditPress} />;
 }
-
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: COLORS.white,
-    margin: SPACING.md,
-    padding: SPACING.lg,
-    borderRadius: 12,
-  },
-  heading: {
-    fontSize: FONT_SIZES.lg,
-    fontWeight: "600",
-    color: COLORS.textPrimary,
-    marginBottom: SPACING.md,
-  },
-  label: {
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
-    marginTop: SPACING.sm,
-  },
-  value: {
-    fontSize: FONT_SIZES.md,
-    color: COLORS.textPrimary,
-    marginTop: 2,
-  },
-  placeholder: {
-    color: COLORS.textSecondary,
-    fontStyle: "italic",
-  },
-  editCard: {
-    backgroundColor: COLORS.white,
-    margin: SPACING.md,
-    padding: SPACING.lg,
-    borderRadius: 12,
-  },
-
-  input: {
-    fontSize: FONT_SIZES.md,
-    color: COLORS.textPrimary,
-    borderWidth: 1,
-    borderColor: COLORS.textSecondary,
-    borderRadius: 10,
-    paddingVertical: SPACING.sm,
-    paddingHorizontal: SPACING.md,
-    marginTop: SPACING.sm,
-  },
-
-  inputFirst: {
-    marginTop: 0,
-  },
-  buttonRow: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    gap: SPACING.sm,
-    marginTop: SPACING.md,
-  },
-
-  cancelBtn: {
-    paddingVertical: SPACING.sm,
-    paddingHorizontal: SPACING.lg,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: COLORS.textSecondary,
-  },
-
-  cancelText: {
-    fontSize: FONT_SIZES.md,
-    color: COLORS.textSecondary,
-    fontWeight: "600",
-  },
-
-  saveBtn: {
-    paddingVertical: SPACING.sm,
-    paddingHorizontal: SPACING.lg,
-    borderRadius: 10,
-    backgroundColor: COLORS.textPrimary,
-  },
-
-  saveText: {
-    fontSize: FONT_SIZES.md,
-    color: COLORS.white,
-    fontWeight: "600",
-  },
-});

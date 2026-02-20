@@ -5,24 +5,16 @@ import MapView, {
   PROVIDER_DEFAULT,
   Region,
 } from "react-native-maps";
-import { StyleSheet, View, Text, Alert } from "react-native";
+import { View, Text, Alert } from "react-native";
 import { Stack } from "expo-router";
 import * as Location from "expo-location";
-import { COLORS } from "@/constants/theme";
 import { LocationCoords } from "@/types/Location";
-
-const DEFAULT_ZOOM = {
-  latitudeDelta: 0.005,
-  longitudeDelta: 0.005,
-};
+import { DEFAULT_ZOOM, DEFAULT_REGION } from "@/constants/mapConfig";
+import { styles } from "@/styles/mapStyles";
 
 export default function MapScreen() {
   const [location, setLocation] = useState<LocationCoords | null>(null); // to store user's live location
-  const [region, setRegion] = useState<Region>({
-    latitude: 33.6844, // default location set to Islamabad
-    longitude: 73.0479,
-    ...DEFAULT_ZOOM,
-  }); // to which and how much region to show on map
+  const [region, setRegion] = useState<Region>(DEFAULT_REGION); // to which and how much region to show on map
   const mapRef = useRef<MapView>(null);
 
   useEffect(() => {
@@ -53,7 +45,10 @@ export default function MapScreen() {
           setLocation(loc.coords);
 
           setRegion((prev) => {
-            if (prev.latitude === 33.6844 && prev.longitude === 73.0479) {
+            if (
+              prev.latitude === DEFAULT_REGION.latitude &&
+              prev.longitude === DEFAULT_REGION.longitude
+            ) {
               const newRegion = {
                 latitude: loc.coords.latitude,
                 longitude: loc.coords.longitude,
@@ -116,25 +111,3 @@ export default function MapScreen() {
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  map: {
-    width: "100%",
-    height: "100%",
-  },
-  attribution: {
-    position: "absolute",
-    bottom: 10,
-    right: 10,
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    fontSize: 10,
-    color: "#666",
-  },
-});
