@@ -1,51 +1,53 @@
-import { useEffect, useState } from "react";
-import { Stack, router, useSegments } from "expo-router";
-import { supabase } from "@/lib/supabase";
 import { ProfileProvider } from "@/context/ProfileProvider";
+import { useProfile } from "@/hooks/ProfileContextHook";
+import { Stack, router, useSegments } from "expo-router";
+import { useEffect } from "react";
 
-export default function StackNavigation() {
+function StackNavigation() {
   const segments = useSegments();
-  const [initializing, setInitializing] = useState(true);
-  //2 useEffect hooks to avoid the closure bug where the listener gets stuck with old values
+  const { session, profile, loading } = useProfile();
+
+  // Handle redirects based on auth/profile state
   useEffect(() => {
-    // Check initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        router.replace("/(tabs)");
-      } else {
-        router.replace("/(auth)/sign-in");
-      }
-      setInitializing(false);
-    });
-  }, []);
+    // Wait until ProfileProvider has finished fetching
+    if (loading) return;
 
-  useEffect(() => {
-    if (initializing) return; //this hook should only run after we check the initial session
+    const inAuth = segments[0] === "(auth)";
+    const inOnboarding = segments[0] === "(onboarding)";
+    const inTabs = segments[0] === "(tabs)";
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      const inAuthGroup = segments[0] === "(auth)";
+    if (!session) {
+      if (!inAuth) router.replace("/(auth)/sign-in");
+      return;
+    }
 
-      if (session && inAuthGroup) {
-        router.replace("/(tabs)");
-      } else if (!session && !inAuthGroup && segments[0] !== undefined) {
-        router.replace("/(auth)/sign-in");
-      }
-    });
+    const hasRole = !!profile?.role;
+    const isComplete =
+      !!profile?.full_name &&
+      !!profile?.university_name &&
+      !!profile?.phone;
 
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [initializing, segments]);
+    if (!hasRole || !isComplete) {
+      if (!inOnboarding) router.replace("/(onboarding)");
+    } else {
+      if (!inTabs) router.replace("/(tabs)");
+    }
+  }, [loading, session, profile]);
+  
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="index" />
+      <Stack.Screen name="(auth)" />
+      <Stack.Screen name="(onboarding)" />
+      <Stack.Screen name="(tabs)" />
+    </Stack>
+  );
+}
 
+export default function RootLayout() {
   return (
     <ProfileProvider>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(tabs)" />
-      </Stack>
+      <StackNavigation />
     </ProfileProvider>
   );
 }

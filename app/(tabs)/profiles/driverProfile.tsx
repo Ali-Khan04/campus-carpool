@@ -1,12 +1,12 @@
-import { View, ActivityIndicator, Alert } from "react-native";
-import { useState } from "react";
+import DriverProfileEmpty from "@/components/driver/DriverProfileEmpty";
+import DriverProfileForm from "@/components/driver/DriverProfileForm";
+import DriverProfileView from "@/components/driver/DriverProfileView";
 import { COLORS } from "@/constants/theme";
 import { useProfile } from "@/hooks/ProfileContextHook";
 import { supabase } from "@/lib/supabase";
 import { driverProfileStyles as styles } from "@/styles/driverProfileStyles";
-import DriverProfileEmpty from "@/components/driver/DriverProfileEmpty";
-import DriverProfileForm from "@/components/driver/DriverProfileForm";
-import DriverProfileView from "@/components/driver/DriverProfileView";
+import { useState } from "react";
+import { ActivityIndicator, Alert, View } from "react-native";
 
 export default function DriverProfile() {
   const { driverProfile, isDriver, loading, dispatch, profile } = useProfile();
@@ -53,35 +53,37 @@ export default function DriverProfile() {
     }
 
     try {
-      if (driverProfile?.id) {
-        // Update existing driver profile
-        const { error } = await supabase
-          .from("driver_profiles")
-          .update(driverProfileData)
-          .eq("id", profile?.id);
+    if (driverProfile?.id) {
+  // Update existing
+  const { data, error } = await supabase
+    .from("driver_profiles")
+    .update(driverProfileData)
+    .eq("id", profile?.id)
+    .select()
+    .single();
 
-        if (error) {
-          console.error("Update error:", error);
-          return;
-        }
+  if (error) {
+    console.error("Update error:", error);
+    return;
+  }
+  dispatch({ type: "SET_DRIVER_PROFILE", payload: data }); 
+  Alert.alert("Your driver profile has been updated");
 
-        dispatch({ type: "UPDATE_DRIVER_PROFILE", payload: driverProfileData });
-        Alert.alert("Your driver profile has been updated");
-      } else {
-        // Insert new driver profile if not already a driver
-        const { data, error } = await supabase.from("driver_profiles").insert({
-          id: profile?.id,
-          ...driverProfileData,
-        });
+} else {
+  // Insert new
+  const { data, error } = await supabase
+    .from("driver_profiles")
+    .insert({ id: profile?.id, ...driverProfileData })
+    .select()  
+    .single(); 
 
-        if (error) {
-          console.error("Insert error:", error);
-          return;
-        }
-
-        dispatch({ type: "SET_DRIVER_PROFILE", payload: data });
-        Alert.alert("Your driver profile has been created.");
-      }
+  if (error) {
+    console.error("Insert error:", error);
+    return;
+  }
+  dispatch({ type: "SET_DRIVER_PROFILE", payload: data });
+  Alert.alert("Your driver profile has been created.");
+}
 
       setEditing(false);
     } catch (error: any) {
