@@ -1,7 +1,6 @@
 import { COLORS, FONT_SIZES, SPACING } from "@/constants/theme";
 import { Ride } from "@/types/Profiles";
-import { getLocationLabel } from "@/utils/locationLabelCache";
-import { useEffect, useState } from "react";
+//import { getLocationLabel } from "@/utils/locationLabelCache";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 interface Props {
@@ -14,7 +13,8 @@ interface Props {
 const formatCoordinates = (lat: number, lng: number) =>
   `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 
-const reverseGeocode = async (lat: number, lng: number) => {
+
+/*const reverseGeocode = async (lat: number, lng: number) => {
   const key = `${lat.toFixed(5)},${lng.toFixed(5)}`;
 
   const response = await fetch(
@@ -33,7 +33,7 @@ const reverseGeocode = async (lat: number, lng: number) => {
   const data = await response.json();
   const label = data.display_name || formatCoordinates(lat, lng);
   return label;
-};
+};*/
 
 export default function RideCard({
   ride,
@@ -46,7 +46,7 @@ export default function RideCard({
   // Read from shared cache at render time
   // CreateRideForm.handleSubmit calls setLocationLabel before inserting to Supabase,
   // so for the driver's own freshly posted ride these will already be populated
-  const cachedPickup = getLocationLabel(ride.pickup_lat, ride.pickup_lng);
+  /*const cachedPickup = getLocationLabel(ride.pickup_lat, ride.pickup_lng);
   const cachedDestination = getLocationLabel(
     ride.destination_lat,
     ride.destination_lng,
@@ -55,18 +55,20 @@ export default function RideCard({
   // Initial state uses the cached label if available, so the card
   // renders human-readable text immediately instead of coordinates
   const [pickupLabel, setPickupLabel] = useState(
-    cachedPickup ?? formatCoordinates(ride.pickup_lat, ride.pickup_lng),
+     formatCoordinates(ride.pickup_lat, ride.pickup_lng),
   );
   const [destinationLabel, setDestinationLabel] = useState(
-    cachedDestination ??
+    
       formatCoordinates(ride.destination_lat, ride.destination_lng),
-  );
+  );*/
+  const pickupLabel = formatCoordinates(ride.pickup_lat, ride.pickup_lng);
+  const destinationLabel = formatCoordinates(ride.destination_lat, ride.destination_lng);
 
-  useEffect(() => {
+  /*useEffect(() => {
     // skip the Nominatim network call entirely if both labels are already cached
-    if (cachedPickup && cachedDestination) return;
+    //if (cachedPickup && cachedDestination) return;
 
-    let mounted = true;
+    //let mounted = true;
 
     const loadLocationLabels = async () => {
       try {
@@ -98,11 +100,9 @@ export default function RideCard({
       mounted = false;
     };
   }, [
-    ride.pickup_lat,
-    ride.pickup_lng,
-    ride.destination_lat,
-    ride.destination_lng,
-  ]);
+    
+  ]);*/
+ 
 
   return (
     <View style={styles.card}>
