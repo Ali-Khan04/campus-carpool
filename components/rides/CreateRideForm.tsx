@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useState } from "react";
+import { setLocationLabel } from "@/utils/locationLabelCache";
 import {
   ActivityIndicator,
   Alert,
@@ -50,6 +51,9 @@ const [showPicker, setShowPicker] = useState(false);
       return;
     }
     if (!session?.user?.id) return;
+
+    setLocationLabel(pickup.lat, pickup.lng, pickup.label);
+    setLocationLabel(destination.lat, destination.lng, destination.label);
 
     setLoading(true);
     const { error } = await supabase.from("rides").insert({

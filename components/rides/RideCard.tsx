@@ -104,9 +104,7 @@ export default function RideCard({ ride, actionLabel, onAction, disabled }: Prop
       </View>
       <View style={styles.row}>
         <Text style={styles.label}>Status</Text>
-        <Text style={[styles.badge, styles[ride.status] ?? styles.active]}>
-          {ride.status}
-        </Text>
+        <Text style={[styles.badge, styles[ride.status] ?? styles.active]}>{ride.status}</Text>
       </View>
 
       {actionLabel && onAction && (
