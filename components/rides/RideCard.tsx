@@ -1,5 +1,7 @@
 import { COLORS, FONT_SIZES, SPACING } from "@/constants/theme";
 import { Ride } from "@/types/Profiles";
+import { getLocationLabel, setLocationLabel } from "@/utils/locationLabelCache";
+import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 interface Props {
@@ -9,22 +11,99 @@ interface Props {
   disabled?: boolean;
 }
 
+const formatCoordinates = (lat: number, lng: number) => `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+
+const reverseGeocode = async (lat: number, lng: number) => {
+  const cached = getLocationLabel(lat, lng);
+  if (cached) {
+    return cached;
+  }
+
+  const response = await fetch(
+    `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=en`,
+    {
+      headers: {
+        Accept: "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch location name");
+  }
+
+  const data = await response.json();
+  const label = data.display_name || formatCoordinates(lat, lng);
+  setLocationLabel(lat, lng, label);
+
+  return label;
+};
+
 export default function RideCard({ ride, actionLabel, onAction, disabled }: Props) {
   const departure = new Date(ride.departure_time).toLocaleString();
+  const [pickupLabel, setPickupLabel] = useState(() => {
+    const cached = getLocationLabel(ride.pickup_lat, ride.pickup_lng);
+    return cached || formatCoordinates(ride.pickup_lat, ride.pickup_lng);
+  });
+  const [destinationLabel, setDestinationLabel] = useState(() => {
+    const cached = getLocationLabel(ride.destination_lat, ride.destination_lng);
+    return cached || formatCoordinates(ride.destination_lat, ride.destination_lng);
+  });
+
+  useEffect(() => {
+    const cachedPickup = getLocationLabel(ride.pickup_lat, ride.pickup_lng);
+    const cachedDestination = getLocationLabel(ride.destination_lat, ride.destination_lng);
+
+    if (cachedPickup) {
+      setPickupLabel(cachedPickup);
+    }
+    if (cachedDestination) {
+      setDestinationLabel(cachedDestination);
+    }
+
+    if (cachedPickup && cachedDestination) {
+      return;
+    }
+
+    let mounted = true;
+
+    const loadLocationLabels = async () => {
+      try {
+        const [pickupName, destinationName] = await Promise.all([
+          reverseGeocode(ride.pickup_lat, ride.pickup_lng),
+          reverseGeocode(ride.destination_lat, ride.destination_lng),
+        ]);
+
+        if (!mounted) return;
+
+        setPickupLabel(pickupName);
+        setDestinationLabel(destinationName);
+      } catch {
+        if (!mounted) return;
+
+        setPickupLabel((current) => current || formatCoordinates(ride.pickup_lat, ride.pickup_lng));
+        setDestinationLabel(
+          (current) => current || formatCoordinates(ride.destination_lat, ride.destination_lng)
+        );
+      }
+    };
+
+    loadLocationLabels();
+
+    return () => {
+      mounted = false;
+    };
+  }, [ride.destination_lat, ride.destination_lng, ride.pickup_lat, ride.pickup_lng]);
 
   return (
     <View style={styles.card}>
       <View style={styles.row}>
         <Text style={styles.label}>Pickup</Text>
-        <Text style={styles.value}>
-          {ride.pickup_lat.toFixed(4)}, {ride.pickup_lng.toFixed(4)}
-        </Text>
+        <Text style={styles.value}>{pickupLabel}</Text>
       </View>
       <View style={styles.row}>
         <Text style={styles.label}>Destination</Text>
-        <Text style={styles.value}>
-          {ride.destination_lat.toFixed(4)}, {ride.destination_lng.toFixed(4)}
-        </Text>
+        <Text style={styles.value}>{destinationLabel}</Text>
       </View>
       <View style={styles.row}>
         <Text style={styles.label}>Departure</Text>
@@ -36,9 +115,7 @@ export default function RideCard({ ride, actionLabel, onAction, disabled }: Prop
       </View>
       <View style={styles.row}>
         <Text style={styles.label}>Status</Text>
-        <Text style={[styles.badge, styles[ride.status] ?? styles.active]}>
-          {ride.status}
-        </Text>
+        <Text style={[styles.badge, styles[ride.status] ?? styles.active]}>{ride.status}</Text>
       </View>
 
       {actionLabel && onAction && (
