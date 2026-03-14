@@ -1,5 +1,5 @@
-import { StyleSheet } from "react-native";
-import { COLORS, SPACING, FONT_SIZES } from "@/constants/theme";
+import { StyleSheet } from 'react-native';
+import { COLORS, SPACING, FONT_SIZES } from '@/constants/theme';
 
 export const authStyles = StyleSheet.create({
   container: {
@@ -7,7 +7,7 @@ export const authStyles = StyleSheet.create({
   },
   title: {
     fontSize: FONT_SIZES.xl,
-    fontWeight: "700",
+    fontWeight: '700',
     color: COLORS.textPrimary,
     marginBottom: SPACING.xs,
   },
@@ -31,7 +31,7 @@ export const authStyles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     paddingVertical: SPACING.md,
     borderRadius: 8,
-    alignItems: "center",
+    alignItems: 'center',
     marginTop: SPACING.sm,
   },
   buttonDisabled: {
@@ -40,7 +40,7 @@ export const authStyles = StyleSheet.create({
   buttonText: {
     color: COLORS.white,
     fontSize: FONT_SIZES.md,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   footerLink: {
     marginTop: SPACING.sm,

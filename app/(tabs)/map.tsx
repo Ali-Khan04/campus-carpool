@@ -1,10 +1,10 @@
-import BaseMap from "@/components/map/BaseMap";
-import { Stack } from "expo-router";
+import BaseMap from '@/components/map/BaseMap';
+import { Stack } from 'expo-router';
 
 export default function MapScreen() {
   return (
     <>
-      <Stack.Screen options={{ title: "Open Map", headerShown: true }} />
+      <Stack.Screen options={{ title: 'Open Map', headerShown: true }} />
       <BaseMap />
     </>
   );

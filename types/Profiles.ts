@@ -7,7 +7,7 @@ export interface Profile {
   avatar_url?: string;
   created_at?: string;
   updated_at?: string;
-    role?: "student" | "driver";  
+  role?: 'student' | 'driver';
 }
 
 export interface DriverProfile {
@@ -29,7 +29,7 @@ export interface Ride {
   destination_lng: number;
   seats_available: number;
   departure_time: string;
-  status: "active" | "full" | "completed" | "cancelled";
+  status: 'active' | 'full' | 'completed' | 'cancelled';
   created_at?: string;
 }
 
@@ -40,6 +40,6 @@ export interface RideRequest {
   seats_requested: number;
   meetup_lat?: number;
   meetup_lng?: number;
-  status: "pending" | "accepted" | "rejected" | "cancelled";
+  status: 'pending' | 'accepted' | 'rejected' | 'cancelled';
   created_at?: string;
 }

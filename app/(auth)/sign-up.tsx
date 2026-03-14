@@ -1,14 +1,14 @@
-import { useState } from "react";
-import { Alert, View } from "react-native";
-import { AuthInput } from "@/types/AuthInput";
-import { supabase } from "@/lib/supabase";
-import AuthForm from "@/components/auth/AuthForm";
-import AuthFooterLink from "@/components/auth/AuthFooterLink";
-import { COLORS, SPACING } from "@/constants/theme";
+import { useState } from 'react';
+import { Alert, View } from 'react-native';
+import { AuthInput } from '@/types/AuthInput';
+import { supabase } from '@/lib/supabase';
+import AuthForm from '@/components/auth/AuthForm';
+import AuthFooterLink from '@/components/auth/AuthFooterLink';
+import { COLORS, SPACING } from '@/constants/theme';
 export default function SignUp() {
   const [loginInfo, setLoginInfo] = useState<AuthInput>({
-    email: "",
-    password: "",
+    email: '',
+    password: '',
   });
   const [loading, setLoading] = useState<boolean>(false);
   const handleLoginInfo = (field: string, value: string) => {
@@ -24,8 +24,7 @@ export default function SignUp() {
       password: loginInfo.password,
     });
     if (error) Alert.alert(error.message);
-    if (!session)
-      Alert.alert("Please check your inbox for email verification!");
+    if (!session) Alert.alert('Please check your inbox for email verification!');
     setLoading(false);
   };
   return (
@@ -33,7 +32,7 @@ export default function SignUp() {
       style={{
         flex: 1,
         backgroundColor: COLORS.background,
-        justifyContent: "center",
+        justifyContent: 'center',
         padding: SPACING.lg,
       }}
     >

@@ -1,6 +1,6 @@
-import { COLORS, FONT_SIZES, SPACING } from "@/constants/theme";
-import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
+import { Ionicons } from '@expo/vector-icons';
+import { useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -12,9 +12,9 @@ import {
   Text,
   TextInput,
   View,
-} from "react-native";
+} from 'react-native';
 
-import BaseMap from "../map/BaseMap";
+import BaseMap from '../map/BaseMap';
 
 export interface PickedLocation {
   lat: number;
@@ -35,16 +35,14 @@ interface SearchResult {
   lon: string;
 }
 
-type ActivePin = "pickup" | "destination";
+type ActivePin = 'pickup' | 'destination';
 
 export default function LocationPickerModal({ visible, onClose, onConfirm }: Props) {
-  
-
-  const [activePin, setActivePin] = useState<ActivePin>("pickup");
+  const [activePin, setActivePin] = useState<ActivePin>('pickup');
   const [pickup, setPickup] = useState<PickedLocation | null>(null);
   const [destination, setDestination] = useState<PickedLocation | null>(null);
 
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
 
@@ -57,12 +55,12 @@ export default function LocationPickerModal({ visible, onClose, onConfirm }: Pro
     try {
       const res = await fetch(
         `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5&countrycodes=pk`,
-        { headers: { "User-Agent": "CampusCarpool/1.0" } }
+        { headers: { 'User-Agent': 'CampusCarpool/1.0' } }
       );
       const data = await res.json();
       setSearchResults(data);
     } catch (e) {
-      console.error("Search error:", e);
+      console.error('Search error:', e);
     } finally {
       setSearching(false);
     }
@@ -72,19 +70,17 @@ export default function LocationPickerModal({ visible, onClose, onConfirm }: Pro
     const loc: PickedLocation = {
       lat: parseFloat(result.lat),
       lng: parseFloat(result.lon),
-      label: result.display_name.split(",").slice(0, 2).join(","),
+      label: result.display_name.split(',').slice(0, 2).join(','),
     };
 
-    if (activePin === "pickup") {
+    if (activePin === 'pickup') {
       setPickup(loc);
     } else {
       setDestination(loc);
     }
 
-    setSearchQuery("");
+    setSearchQuery('');
     setSearchResults([]);
-
-    
   };
 
   const handleMapPress = (e: any) => {
@@ -93,20 +89,20 @@ export default function LocationPickerModal({ visible, onClose, onConfirm }: Pro
     // Reverse geocode using Nominatim api
     fetch(
       `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
-      { headers: { "User-Agent": "CampusCarpool/1.0" } }
+      { headers: { 'User-Agent': 'CampusCarpool/1.0' } }
     )
       .then((r) => r.json())
       .then((data) => {
         const label = data.display_name
-          ? data.display_name.split(",").slice(0, 2).join(",")
+          ? data.display_name.split(',').slice(0, 2).join(',')
           : `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
 
         const loc: PickedLocation = { lat: latitude, lng: longitude, label };
 
-        if (activePin === "pickup") {
+        if (activePin === 'pickup') {
           setPickup(loc);
           // Auto switch to destination after pickup is set
-          if (!destination) setActivePin("destination");
+          if (!destination) setActivePin('destination');
         } else {
           setDestination(loc);
         }
@@ -117,9 +113,9 @@ export default function LocationPickerModal({ visible, onClose, onConfirm }: Pro
           lng: longitude,
           label: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
         };
-        if (activePin === "pickup") {
+        if (activePin === 'pickup') {
           setPickup(loc);
-          if (!destination) setActivePin("destination");
+          if (!destination) setActivePin('destination');
         } else {
           setDestination(loc);
         }
@@ -137,9 +133,9 @@ export default function LocationPickerModal({ visible, onClose, onConfirm }: Pro
   const handleClose = () => {
     setPickup(null);
     setDestination(null);
-    setSearchQuery("");
+    setSearchQuery('');
     setSearchResults([]);
-    setActivePin("pickup");
+    setActivePin('pickup');
     onClose();
   };
 
@@ -147,10 +143,9 @@ export default function LocationPickerModal({ visible, onClose, onConfirm }: Pro
     <Modal visible={visible} animationType="slide" onRequestClose={handleClose}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={styles.container}>
-
           {/* Header */}
           <View style={styles.header}>
             <Pressable onPress={handleClose} style={styles.closeBtn}>
@@ -169,40 +164,47 @@ export default function LocationPickerModal({ visible, onClose, onConfirm }: Pro
           {/* Pin toggle */}
           <View style={styles.pinToggle}>
             <Pressable
-              style={[styles.pinBtn, activePin === "pickup" && styles.pinBtnActive]}
-              onPress={() => setActivePin("pickup")}
+              style={[styles.pinBtn, activePin === 'pickup' && styles.pinBtnActive]}
+              onPress={() => setActivePin('pickup')}
             >
               <Ionicons
                 name="radio-button-on"
                 size={16}
-                color={activePin === "pickup" ? COLORS.white : COLORS.primary}
+                color={activePin === 'pickup' ? COLORS.white : COLORS.primary}
               />
-              <Text style={[styles.pinBtnText, activePin === "pickup" && styles.pinBtnTextActive]}>
-                {pickup ? pickup.label : "Set Pickup"}
+              <Text style={[styles.pinBtnText, activePin === 'pickup' && styles.pinBtnTextActive]}>
+                {pickup ? pickup.label : 'Set Pickup'}
               </Text>
             </Pressable>
 
             <Pressable
-              style={[styles.pinBtn, activePin === "destination" && styles.pinBtnDestActive]}
-              onPress={() => setActivePin("destination")}
+              style={[styles.pinBtn, activePin === 'destination' && styles.pinBtnDestActive]}
+              onPress={() => setActivePin('destination')}
             >
               <Ionicons
                 name="location"
                 size={16}
-                color={activePin === "destination" ? COLORS.white : "#EF4444"}
+                color={activePin === 'destination' ? COLORS.white : '#EF4444'}
               />
-              <Text style={[styles.pinBtnText, activePin === "destination" && styles.pinBtnTextActive]}>
-                {destination ? destination.label : "Set Destination"}
+              <Text
+                style={[styles.pinBtnText, activePin === 'destination' && styles.pinBtnTextActive]}
+              >
+                {destination ? destination.label : 'Set Destination'}
               </Text>
             </Pressable>
           </View>
 
           {/* Search bar */}
           <View style={styles.searchContainer}>
-            <Ionicons name="search" size={18} color={COLORS.textSecondary} style={styles.searchIcon} />
+            <Ionicons
+              name="search"
+              size={18}
+              color={COLORS.textSecondary}
+              style={styles.searchIcon}
+            />
             <TextInput
               style={styles.searchInput}
-              placeholder={`Search ${activePin === "pickup" ? "pickup" : "destination"}...`}
+              placeholder={`Search ${activePin === 'pickup' ? 'pickup' : 'destination'}...`}
               value={searchQuery}
               onChangeText={(t) => {
                 setSearchQuery(t);
@@ -221,10 +223,7 @@ export default function LocationPickerModal({ visible, onClose, onConfirm }: Pro
                 keyExtractor={(item) => item.place_id}
                 keyboardShouldPersistTaps="handled"
                 renderItem={({ item }) => (
-                  <Pressable
-                    style={styles.resultItem}
-                    onPress={() => handleSelectResult(item)}
-                  >
+                  <Pressable style={styles.resultItem} onPress={() => handleSelectResult(item)}>
                     <Ionicons name="location-outline" size={16} color={COLORS.textSecondary} />
                     <Text style={styles.resultText} numberOfLines={2}>
                       {item.display_name}
@@ -235,34 +234,41 @@ export default function LocationPickerModal({ visible, onClose, onConfirm }: Pro
             </View>
           )}
 
-         <BaseMap
-  onPress={handleMapPress}
-  extraMarkers={[
-    ...(pickup ? [{
-      coordinate: { latitude: pickup.lat, longitude: pickup.lng },
-      title: "Pickup",
-      description: pickup.label,
-      pinColor: COLORS.primary,
-    }] : []),
-    ...(destination ? [{
-      coordinate: { latitude: destination.lat, longitude: destination.lng },
-      title: "Destination",
-      description: destination.label,
-      pinColor: "#EF4444",
-    }] : []),
-  ]}
-/>
+          <BaseMap
+            onPress={handleMapPress}
+            extraMarkers={[
+              ...(pickup
+                ? [
+                    {
+                      coordinate: { latitude: pickup.lat, longitude: pickup.lng },
+                      title: 'Pickup',
+                      description: pickup.label,
+                      pinColor: COLORS.primary,
+                    },
+                  ]
+                : []),
+              ...(destination
+                ? [
+                    {
+                      coordinate: { latitude: destination.lat, longitude: destination.lng },
+                      title: 'Destination',
+                      description: destination.label,
+                      pinColor: '#EF4444',
+                    },
+                  ]
+                : []),
+            ]}
+          />
 
           <View style={styles.hint}>
             <Ionicons name="information-circle-outline" size={14} color={COLORS.textSecondary} />
             <Text style={styles.hintText}>
-              Tap on map or search to place{" "}
-              <Text style={{ fontWeight: "700" }}>
-                {activePin === "pickup" ? "pickup (blue)" : "destination (red)"}
+              Tap on map or search to place{' '}
+              <Text style={{ fontWeight: '700' }}>
+                {activePin === 'pickup' ? 'pickup (blue)' : 'destination (red)'}
               </Text>
             </Text>
           </View>
-
         </View>
       </KeyboardAvoidingView>
     </Modal>
@@ -272,9 +278,9 @@ export default function LocationPickerModal({ visible, onClose, onConfirm }: Pro
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     padding: SPACING.md,
     paddingTop: SPACING.lg,
     backgroundColor: COLORS.white,
@@ -283,7 +289,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: FONT_SIZES.md,
-    fontWeight: "700",
+    fontWeight: '700',
     color: COLORS.textPrimary,
   },
   closeBtn: { padding: SPACING.xs },
@@ -294,9 +300,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   confirmDisabled: { backgroundColor: COLORS.border },
-  confirmText: { color: COLORS.white, fontWeight: "600", fontSize: FONT_SIZES.sm },
+  confirmText: { color: COLORS.white, fontWeight: '600', fontSize: FONT_SIZES.sm },
   pinToggle: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: SPACING.sm,
     padding: SPACING.sm,
     backgroundColor: COLORS.white,
@@ -305,8 +311,8 @@ const styles = StyleSheet.create({
   },
   pinBtn: {
     flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: SPACING.xs,
     padding: SPACING.sm,
     borderRadius: 8,
@@ -315,7 +321,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
   },
   pinBtnActive: { backgroundColor: COLORS.primary },
-  pinBtnDestActive: { backgroundColor: "#EF4444", borderColor: "#EF4444" },
+  pinBtnDestActive: { backgroundColor: '#EF4444', borderColor: '#EF4444' },
   pinBtnText: {
     fontSize: 12,
     color: COLORS.textPrimary,
@@ -324,8 +330,8 @@ const styles = StyleSheet.create({
   } as any,
   pinBtnTextActive: { color: COLORS.white },
   searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     margin: SPACING.sm,
     backgroundColor: COLORS.white,
     borderRadius: 10,
@@ -341,7 +347,7 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
   },
   resultsContainer: {
-    position: "absolute",
+    position: 'absolute',
     top: 185,
     left: SPACING.sm,
     right: SPACING.sm,
@@ -352,14 +358,14 @@ const styles = StyleSheet.create({
     zIndex: 999,
     maxHeight: 200,
     elevation: 5,
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
   resultItem: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: SPACING.sm,
     padding: SPACING.sm,
     borderBottomWidth: 1,
@@ -372,8 +378,8 @@ const styles = StyleSheet.create({
   },
   map: { flex: 1 },
   hint: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: SPACING.xs,
     padding: SPACING.sm,
     backgroundColor: COLORS.white,

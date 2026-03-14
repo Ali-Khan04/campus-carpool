@@ -1,9 +1,9 @@
-import { COLORS, FONT_SIZES, SPACING } from "@/constants/theme";
-import { useProfile } from "@/hooks/ProfileContextHook";
-import { supabase } from "@/lib/supabase";
-import { Ride } from "@/types/Profiles";
-import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
+import { useProfile } from '@/hooks/ProfileContextHook';
+import { supabase } from '@/lib/supabase';
+import { Ride } from '@/types/Profiles';
+import { Ionicons } from '@expo/vector-icons';
+import { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -13,8 +13,8 @@ import {
   Text,
   TextInput,
   View,
-} from "react-native";
-import LocationPickerModal, { PickedLocation } from "./LocationPickerModal";
+} from 'react-native';
+import LocationPickerModal, { PickedLocation } from './LocationPickerModal';
 
 interface Props {
   ride: Ride | null;
@@ -25,7 +25,7 @@ interface Props {
 
 export default function RequestRideModal({ ride, visible, onClose, onRequested }: Props) {
   const { session } = useProfile();
-  const [seats, setSeats] = useState("1");
+  const [seats, setSeats] = useState('1');
   const [meetupLocation, setMeetupLocation] = useState<PickedLocation | null>(null);
   const [mapVisible, setMapVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -35,26 +35,26 @@ export default function RequestRideModal({ ride, visible, onClose, onRequested }
 
     const seatsNum = parseInt(seats);
     if (isNaN(seatsNum) || seatsNum < 1 || seatsNum > ride.seats_available) {
-      Alert.alert("Error", `Enter seats between 1 and ${ride.seats_available}.`);
+      Alert.alert('Error', `Enter seats between 1 and ${ride.seats_available}.`);
       return;
     }
 
     setLoading(true);
-    const { error } = await supabase.from("ride_requests").insert({
+    const { error } = await supabase.from('ride_requests').insert({
       ride_id: ride.id,
       student_id: session.user.id,
       seats_requested: seatsNum,
       meetup_lat: meetupLocation?.lat ?? null,
       meetup_lng: meetupLocation?.lng ?? null,
-      status: "pending",
+      status: 'pending',
     });
     setLoading(false);
 
     if (error) {
-      Alert.alert("Error", error.message);
+      Alert.alert('Error', error.message);
     } else {
-      Alert.alert("Requested!", "Your ride request has been sent.");
-      setSeats("1");
+      Alert.alert('Requested!', 'Your ride request has been sent.');
+      setSeats('1');
       setMeetupLocation(null);
       onRequested();
       onClose();
@@ -62,7 +62,7 @@ export default function RequestRideModal({ ride, visible, onClose, onRequested }
   };
 
   const handleClose = () => {
-    setSeats("1");
+    setSeats('1');
     setMeetupLocation(null);
     onClose();
   };
@@ -76,8 +76,8 @@ export default function RequestRideModal({ ride, visible, onClose, onRequested }
 
             {ride && (
               <Text style={styles.subtitle}>
-                Leaving at {new Date(ride.departure_time).toLocaleString()} •{" "}
-                {ride.seats_available} seats left
+                Leaving at {new Date(ride.departure_time).toLocaleString()} • {ride.seats_available}{' '}
+                seats left
               </Text>
             )}
 
@@ -91,13 +91,10 @@ export default function RequestRideModal({ ride, visible, onClose, onRequested }
 
             {/* Meetup location picker */}
             <Text style={styles.label}>Meetup Point (optional)</Text>
-            <Pressable
-              style={styles.mapPickerBtn}
-              onPress={() => setMapVisible(true)}
-            >
+            <Pressable style={styles.mapPickerBtn} onPress={() => setMapVisible(true)}>
               <Ionicons name="map-outline" size={18} color={COLORS.primary} />
               <Text style={styles.mapPickerText} numberOfLines={1}>
-                {meetupLocation ? meetupLocation.label : "Tap to set meetup location"}
+                {meetupLocation ? meetupLocation.label : 'Tap to set meetup location'}
               </Text>
               {meetupLocation && (
                 <Pressable onPress={() => setMeetupLocation(null)}>
@@ -110,11 +107,7 @@ export default function RequestRideModal({ ride, visible, onClose, onRequested }
               <Pressable style={styles.cancelBtn} onPress={handleClose}>
                 <Text style={styles.cancelText}>Cancel</Text>
               </Pressable>
-              <Pressable
-                style={styles.confirmBtn}
-                onPress={handleRequest}
-                disabled={loading}
-              >
+              <Pressable style={styles.confirmBtn} onPress={handleRequest} disabled={loading}>
                 {loading ? (
                   <ActivityIndicator color={COLORS.white} />
                 ) : (
@@ -126,7 +119,6 @@ export default function RequestRideModal({ ride, visible, onClose, onRequested }
         </View>
       </Modal>
 
-     
       <LocationPickerModal
         visible={mapVisible}
         onClose={() => setMapVisible(false)}
@@ -142,8 +134,8 @@ export default function RequestRideModal({ ride, visible, onClose, onRequested }
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    justifyContent: "flex-end",
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
   },
   sheet: {
     backgroundColor: COLORS.white,
@@ -154,7 +146,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: FONT_SIZES.lg,
-    fontWeight: "700",
+    fontWeight: '700',
     color: COLORS.textPrimary,
     marginBottom: SPACING.xs,
   },
@@ -178,8 +170,8 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
   },
   mapPickerBtn: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: SPACING.sm,
     backgroundColor: COLORS.background,
     borderWidth: 1,
@@ -194,7 +186,7 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
   },
   actions: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: SPACING.sm,
     marginTop: SPACING.lg,
   },
@@ -204,21 +196,21 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: COLORS.border,
-    alignItems: "center",
+    alignItems: 'center',
   },
   cancelText: {
     color: COLORS.textSecondary,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   confirmBtn: {
     flex: 1,
     padding: SPACING.md,
     borderRadius: 8,
     backgroundColor: COLORS.primary,
-    alignItems: "center",
+    alignItems: 'center',
   },
   confirmText: {
     color: COLORS.white,
-    fontWeight: "600",
+    fontWeight: '600',
   },
 });

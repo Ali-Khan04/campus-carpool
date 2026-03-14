@@ -1,10 +1,10 @@
-import { COLORS, FONT_SIZES, SPACING } from "@/constants/theme";
-import { useProfile } from "@/hooks/ProfileContextHook";
-import { supabase } from "@/lib/supabase";
-import { Ride, RideRequest } from "@/types/Profiles";
-import { Ionicons } from "@expo/vector-icons";
-import { router, useFocusEffect } from "expo-router";
-import { useCallback, useState } from "react";
+import { COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
+import { useProfile } from '@/hooks/ProfileContextHook';
+import { supabase } from '@/lib/supabase';
+import { Ride, RideRequest } from '@/types/Profiles';
+import { Ionicons } from '@expo/vector-icons';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -13,21 +13,21 @@ import {
   StyleSheet,
   Text,
   View,
-} from "react-native";
+} from 'react-native';
 
 export default function HomeScreen() {
   const { profile, isDriver, session } = useProfile();
 
   const handleLogout = async () => {
-    Alert.alert("Logout", "Are you sure?", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert('Logout', 'Are you sure?', [
+      { text: 'Cancel', style: 'cancel' },
       {
-        text: "Logout",
-        style: "destructive",
+        text: 'Logout',
+        style: 'destructive',
         onPress: async () => {
-  await supabase.auth.signOut();
-  router.replace("/(auth)/sign-in");
-},
+          await supabase.auth.signOut();
+          router.replace('/(auth)/sign-in');
+        },
       },
     ]);
   };
@@ -35,29 +35,30 @@ export default function HomeScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
-  <View>
-    <Text style={styles.greeting}>
-      {`Hey, ${profile?.full_name?.split(" ")[0] ?? "there"} 👋`}
-    </Text>
-    <Text style={styles.subGreeting}>
-      {isDriver ? "Ready to give a ride?" : "Need a ride today?"}
-    </Text>
-  </View>
-  <Pressable onPress={handleLogout} style={styles.logoutBtn}>
-    <Ionicons name="log-out-outline" size={22} color={COLORS.textSecondary} />
-  </Pressable>
-</View>
-      
-{session?.user?.id && (
-  isDriver 
-    ? <DriverDashboard userId={session.user.id} /> 
-    : <StudentDashboard userId={session.user.id} />
-)}
+        <View>
+          <Text style={styles.greeting}>
+            {`Hey, ${profile?.full_name?.split(' ')[0] ?? 'there'} 👋`}
+          </Text>
+          <Text style={styles.subGreeting}>
+            {isDriver ? 'Ready to give a ride?' : 'Need a ride today?'}
+          </Text>
+        </View>
+        <Pressable onPress={handleLogout} style={styles.logoutBtn}>
+          <Ionicons name="log-out-outline" size={22} color={COLORS.textSecondary} />
+        </Pressable>
+      </View>
+
+      {session?.user?.id &&
+        (isDriver ? (
+          <DriverDashboard userId={session.user.id} />
+        ) : (
+          <StudentDashboard userId={session.user.id} />
+        ))}
     </ScrollView>
   );
 }
 
-//Driver Dashboard 
+//Driver Dashboard
 
 function DriverDashboard({ userId }: { userId: string }) {
   const [activeRide, setActiveRide] = useState<Ride | null>(null);
@@ -69,23 +70,23 @@ function DriverDashboard({ userId }: { userId: string }) {
 
     // Get active ride
     const { data: rideData } = await supabase
-      .from("rides")
-      .select("*")
-      .eq("driver_id", userId)
-      .eq("status", "active")
-      .order("departure_time", { ascending: true })
+      .from('rides')
+      .select('*')
+      .eq('driver_id', userId)
+      .eq('status', 'active')
+      .order('departure_time', { ascending: true })
       .limit(1)
       .maybeSingle();
 
     setActiveRide(rideData ?? null);
 
-    // Count pending requests 
+    // Count pending requests
     if (rideData) {
       const { count } = await supabase
-        .from("ride_requests")
-        .select("id", { count: "exact", head: true })
-        .eq("ride_id", rideData.id)
-        .eq("status", "pending");
+        .from('ride_requests')
+        .select('id', { count: 'exact', head: true })
+        .eq('ride_id', rideData.id)
+        .eq('status', 'pending');
 
       setPendingCount(count ?? 0);
     }
@@ -93,40 +94,37 @@ function DriverDashboard({ userId }: { userId: string }) {
     setLoading(false);
   };
 
-  useFocusEffect(useCallback(() => { fetch(); }, []));
+  useFocusEffect(
+    useCallback(() => {
+      fetch();
+    }, [])
+  );
 
-  if (loading) return <ActivityIndicator color={COLORS.primary} style={{ marginTop: SPACING.xl }} />;
+  if (loading)
+    return <ActivityIndicator color={COLORS.primary} style={{ marginTop: SPACING.xl }} />;
 
   return (
     <View style={styles.dashContainer}>
-   
-      <Pressable style={styles.statCard} onPress={() => router.push("/(tabs)/rides")}>
+      <Pressable style={styles.statCard} onPress={() => router.push('/(tabs)/rides')}>
         <Ionicons name="people-outline" size={28} color={COLORS.primary} />
         <Text style={styles.statNumber}>{pendingCount}</Text>
         <Text style={styles.statLabel}>Pending Requests</Text>
       </Pressable>
 
-    
       <Text style={styles.sectionTitle}>Your Next Ride</Text>
       {activeRide ? (
         <View style={styles.rideCard}>
           <Row label="Departure" value={new Date(activeRide.departure_time).toLocaleString()} />
           <Row label="Seats left" value={String(activeRide.seats_available)} />
           <Row label="Status" value={activeRide.status} />
-          <Pressable
-            style={styles.actionBtn}
-            onPress={() => router.push("/(tabs)/rides")}
-          >
+          <Pressable style={styles.actionBtn} onPress={() => router.push('/(tabs)/rides')}>
             <Text style={styles.actionBtnText}>Manage Ride →</Text>
           </Pressable>
         </View>
       ) : (
         <View style={styles.emptyCard}>
           <Text style={styles.emptyText}>No active ride posted.</Text>
-          <Pressable
-            style={styles.actionBtn}
-            onPress={() => router.push("/(tabs)/rides")}
-          >
+          <Pressable style={styles.actionBtn} onPress={() => router.push('/(tabs)/rides')}>
             <Text style={styles.actionBtnText}>Post a Ride →</Text>
           </Pressable>
         </View>
@@ -135,7 +133,7 @@ function DriverDashboard({ userId }: { userId: string }) {
   );
 }
 
-//Student Dashboard 
+//Student Dashboard
 
 function StudentDashboard({ userId }: { userId: string }) {
   const [activeRequest, setActiveRequest] = useState<RideRequest | null>(null);
@@ -146,11 +144,11 @@ function StudentDashboard({ userId }: { userId: string }) {
     setLoading(true);
 
     const { data: reqData } = await supabase
-      .from("ride_requests")
-      .select("*")
-      .eq("student_id", userId)
-      .in("status", ["pending", "accepted"])
-      .order("created_at", { ascending: false })
+      .from('ride_requests')
+      .select('*')
+      .eq('student_id', userId)
+      .in('status', ['pending', 'accepted'])
+      .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
 
@@ -158,9 +156,9 @@ function StudentDashboard({ userId }: { userId: string }) {
 
     if (reqData) {
       const { data: rideData } = await supabase
-        .from("rides")
-        .select("*")
-        .eq("id", reqData.ride_id)
+        .from('rides')
+        .select('*')
+        .eq('id', reqData.ride_id)
         .maybeSingle();
       setRide(rideData ?? null);
     }
@@ -168,9 +166,14 @@ function StudentDashboard({ userId }: { userId: string }) {
     setLoading(false);
   };
 
-  useFocusEffect(useCallback(() => { fetch(); }, []));
+  useFocusEffect(
+    useCallback(() => {
+      fetch();
+    }, [])
+  );
 
-  if (loading) return <ActivityIndicator color={COLORS.primary} style={{ marginTop: SPACING.xl }} />;
+  if (loading)
+    return <ActivityIndicator color={COLORS.primary} style={{ marginTop: SPACING.xl }} />;
 
   return (
     <View style={styles.dashContainer}>
@@ -179,16 +182,10 @@ function StudentDashboard({ userId }: { userId: string }) {
       {activeRequest && ride ? (
         <View style={styles.rideCard}>
           <StatusBadge status={activeRequest.status} />
-          <Row
-            label="Departure"
-            value={new Date(ride.departure_time).toLocaleString()}
-          />
+          <Row label="Departure" value={new Date(ride.departure_time).toLocaleString()} />
           <Row label="Seats requested" value={String(activeRequest.seats_requested)} />
-          {activeRequest.status === "accepted" && (
-            <Pressable
-              style={styles.actionBtn}
-              onPress={() => router.push("/(tabs)/map")}
-            >
+          {activeRequest.status === 'accepted' && (
+            <Pressable style={styles.actionBtn} onPress={() => router.push('/(tabs)/map')}>
               <Text style={styles.actionBtnText}>Track Driver on Map →</Text>
             </Pressable>
           )}
@@ -196,10 +193,7 @@ function StudentDashboard({ userId }: { userId: string }) {
       ) : (
         <View style={styles.emptyCard}>
           <Text style={styles.emptyText}>No active ride request.</Text>
-          <Pressable
-            style={styles.actionBtn}
-            onPress={() => router.push("/(tabs)/rides")}
-          >
+          <Pressable style={styles.actionBtn} onPress={() => router.push('/(tabs)/rides')}>
             <Text style={styles.actionBtnText}>Browse Rides →</Text>
           </Pressable>
         </View>
@@ -219,33 +213,30 @@ function Row({ label, value }: { label: string; value: string }) {
 
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, { bg: string; text: string }> = {
-    pending:  { bg: "#FEF3C7", text: "#92400E" },
-    accepted: { bg: "#D1FAE5", text: "#065F46" },
-    rejected: { bg: "#FEE2E2", text: "#991B1B" },
+    pending: { bg: '#FEF3C7', text: '#92400E' },
+    accepted: { bg: '#D1FAE5', text: '#065F46' },
+    rejected: { bg: '#FEE2E2', text: '#991B1B' },
   };
   const c = colors[status] ?? colors.pending;
   return (
     <View style={[styles.badge, { backgroundColor: c.bg }]}>
-      <Text style={[styles.badgeText, { color: c.text }]}>
-        {status.toUpperCase()}
-      </Text>
+      <Text style={[styles.badgeText, { color: c.text }]}>{status.toUpperCase()}</Text>
     </View>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   content: { padding: SPACING.md, paddingTop: SPACING.lg },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     marginBottom: SPACING.lg,
   },
   greeting: {
     fontSize: FONT_SIZES.lg,
-    fontWeight: "700",
+    fontWeight: '700',
     color: COLORS.textPrimary,
   },
   subGreeting: {
@@ -259,14 +250,14 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: SPACING.lg,
-    alignItems: "center",
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: COLORS.border,
     gap: SPACING.xs,
   },
   statNumber: {
     fontSize: 36,
-    fontWeight: "800",
+    fontWeight: '800',
     color: COLORS.primary,
   },
   statLabel: {
@@ -275,7 +266,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: FONT_SIZES.md,
-    fontWeight: "700",
+    fontWeight: '700',
     color: COLORS.textPrimary,
   },
   rideCard: {
@@ -292,25 +283,25 @@ const styles = StyleSheet.create({
     padding: SPACING.lg,
     borderWidth: 1,
     borderColor: COLORS.border,
-    alignItems: "center",
+    alignItems: 'center',
     gap: SPACING.md,
   },
   emptyText: { color: COLORS.textSecondary, fontSize: FONT_SIZES.sm },
-  row: { flexDirection: "row", justifyContent: "space-between" },
+  row: { flexDirection: 'row', justifyContent: 'space-between' },
   rowLabel: { fontSize: FONT_SIZES.sm, color: COLORS.textSecondary },
-  rowValue: { fontSize: FONT_SIZES.sm, color: COLORS.textPrimary, fontWeight: "500" },
+  rowValue: { fontSize: FONT_SIZES.sm, color: COLORS.textPrimary, fontWeight: '500' },
   actionBtn: {
     backgroundColor: COLORS.primary,
     padding: SPACING.sm,
     borderRadius: 8,
-    alignItems: "center",
+    alignItems: 'center',
   },
-  actionBtnText: { color: COLORS.white, fontWeight: "600", fontSize: FONT_SIZES.sm },
+  actionBtnText: { color: COLORS.white, fontWeight: '600', fontSize: FONT_SIZES.sm },
   badge: {
-    alignSelf: "flex-start",
+    alignSelf: 'flex-start',
     paddingHorizontal: SPACING.sm,
     paddingVertical: 4,
     borderRadius: 99,
   },
-  badgeText: { fontSize: FONT_SIZES.sm, fontWeight: "700" },
+  badgeText: { fontSize: FONT_SIZES.sm, fontWeight: '700' },
 });

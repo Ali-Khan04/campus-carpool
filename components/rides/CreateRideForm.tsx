@@ -1,9 +1,9 @@
-import { COLORS, FONT_SIZES, SPACING } from "@/constants/theme";
-import { useProfile } from "@/hooks/ProfileContextHook";
-import { supabase } from "@/lib/supabase";
-import { Ionicons } from "@expo/vector-icons";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import { useState } from "react";
+import { COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
+import { useProfile } from '@/hooks/ProfileContextHook';
+import { supabase } from '@/lib/supabase';
+import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { useState } from 'react';
 //import { setLocationLabel } from "@/utils/locationLabelCache";
 import {
   ActivityIndicator,
@@ -14,8 +14,8 @@ import {
   Text,
   TextInput,
   View,
-} from "react-native";
-import LocationPickerModal, { PickedLocation } from "./LocationPickerModal";
+} from 'react-native';
+import LocationPickerModal, { PickedLocation } from './LocationPickerModal';
 
 interface Props {
   onRideCreated: () => void;
@@ -26,9 +26,9 @@ export default function CreateRideForm({ onRideCreated }: Props) {
 
   const [pickup, setPickup] = useState<PickedLocation | null>(null);
   const [destination, setDestination] = useState<PickedLocation | null>(null);
-  const [seats, setSeats] = useState("");
+  const [seats, setSeats] = useState('');
   const [departureDate, setDepartureDate] = useState(new Date());
-const [showPicker, setShowPicker] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
   const [mapVisible, setMapVisible] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -39,15 +39,15 @@ const [showPicker, setShowPicker] = useState(false);
 
   const handleSubmit = async () => {
     if (!pickup || !destination) {
-      Alert.alert("Error", "Please set pickup and destination on the map.");
+      Alert.alert('Error', 'Please set pickup and destination on the map.');
       return;
     }
     if (!seats || isNaN(Number(seats)) || Number(seats) < 1) {
-      Alert.alert("Error", "Enter a valid number of seats.");
+      Alert.alert('Error', 'Enter a valid number of seats.');
       return;
     }
     if (!departureDate) {
-      Alert.alert("Error", "Enter a departure time.");
+      Alert.alert('Error', 'Enter a departure time.');
       return;
     }
     if (!session?.user?.id) return;
@@ -56,25 +56,25 @@ const [showPicker, setShowPicker] = useState(false);
     setLocationLabel(destination.lat, destination.lng, destination.label);*/
 
     setLoading(true);
-    const { error } = await supabase.from("rides").insert({
+    const { error } = await supabase.from('rides').insert({
       driver_id: session.user.id,
       pickup_lat: pickup.lat,
       pickup_lng: pickup.lng,
       destination_lat: destination.lat,
       destination_lng: destination.lng,
       seats_available: parseInt(seats),
-    departure_time: departureDate.toISOString(),
-      status: "active",
+      departure_time: departureDate.toISOString(),
+      status: 'active',
     });
     setLoading(false);
 
     if (error) {
-      Alert.alert("Error", error.message);
+      Alert.alert('Error', error.message);
     } else {
-      Alert.alert("Success", "Ride posted!");
+      Alert.alert('Success', 'Ride posted!');
       setPickup(null);
       setDestination(null);
-      setSeats("");
+      setSeats('');
       setDepartureDate(new Date());
       onRideCreated();
     }
@@ -88,7 +88,7 @@ const [showPicker, setShowPicker] = useState(false);
       <Pressable style={styles.mapPickerBtn} onPress={() => setMapVisible(true)}>
         <Ionicons name="map-outline" size={20} color={COLORS.primary} />
         <Text style={styles.mapPickerText}>
-          {pickup && destination ? "Change Locations" : "Set Pickup & Destination"}
+          {pickup && destination ? 'Change Locations' : 'Set Pickup & Destination'}
         </Text>
         <Ionicons name="chevron-forward" size={16} color={COLORS.textSecondary} />
       </Pressable>
@@ -97,13 +97,17 @@ const [showPicker, setShowPicker] = useState(false);
       {pickup && (
         <View style={styles.locationRow}>
           <View style={[styles.locationDot, { backgroundColor: COLORS.primary }]} />
-          <Text style={styles.locationText} numberOfLines={1}>{pickup.label}</Text>
+          <Text style={styles.locationText} numberOfLines={1}>
+            {pickup.label}
+          </Text>
         </View>
       )}
       {destination && (
         <View style={styles.locationRow}>
-          <View style={[styles.locationDot, { backgroundColor: "#EF4444" }]} />
-          <Text style={styles.locationText} numberOfLines={1}>{destination.label}</Text>
+          <View style={[styles.locationDot, { backgroundColor: '#EF4444' }]} />
+          <Text style={styles.locationText} numberOfLines={1}>
+            {destination.label}
+          </Text>
         </View>
       )}
 
@@ -116,26 +120,23 @@ const [showPicker, setShowPicker] = useState(false);
         onChangeText={setSeats}
         placeholderTextColor={COLORS.textSecondary}
       />
-<Text style={styles.label}>Departure Time</Text>
-<Pressable style={styles.input} onPress={() => setShowPicker(true)}>
-  <Text style={{ color: COLORS.textPrimary }}>
-    {departureDate.toLocaleString()}
-  </Text>
-</Pressable>
+      <Text style={styles.label}>Departure Time</Text>
+      <Pressable style={styles.input} onPress={() => setShowPicker(true)}>
+        <Text style={{ color: COLORS.textPrimary }}>{departureDate.toLocaleString()}</Text>
+      </Pressable>
 
-{showPicker && (
-  <DateTimePicker
-    value={departureDate}
-    mode="datetime"
-    display="default"
-    minimumDate={new Date()}
-    onChange={(event, selected) => {
-      setShowPicker(false);
-      if (selected) setDepartureDate(selected);
-    }}
-  />
-)}
-
+      {showPicker && (
+        <DateTimePicker
+          value={departureDate}
+          mode="datetime"
+          display="default"
+          minimumDate={new Date()}
+          onChange={(event, selected) => {
+            setShowPicker(false);
+            if (selected) setDepartureDate(selected);
+          }}
+        />
+      )}
 
       <Pressable style={styles.button} onPress={handleSubmit} disabled={loading}>
         {loading ? (
@@ -162,13 +163,13 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: FONT_SIZES.lg,
-    fontWeight: "700",
+    fontWeight: '700',
     color: COLORS.textPrimary,
     marginBottom: SPACING.lg,
   },
   mapPickerBtn: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: SPACING.sm,
     backgroundColor: COLORS.white,
     borderWidth: 1,
@@ -181,11 +182,11 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: FONT_SIZES.sm,
     color: COLORS.textPrimary,
-    fontWeight: "500",
+    fontWeight: '500',
   },
   locationRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: SPACING.sm,
     paddingHorizontal: SPACING.sm,
     paddingVertical: SPACING.xs,
@@ -220,12 +221,12 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     padding: SPACING.md,
     borderRadius: 8,
-    alignItems: "center",
+    alignItems: 'center',
     marginTop: SPACING.lg,
   },
   buttonText: {
     color: COLORS.white,
-    fontWeight: "600",
+    fontWeight: '600',
     fontSize: FONT_SIZES.md,
   },
 });

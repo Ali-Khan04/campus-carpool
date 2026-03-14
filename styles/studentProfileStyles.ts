@@ -1,5 +1,5 @@
-import { StyleSheet } from "react-native";
-import { COLORS, SPACING, FONT_SIZES } from "@/constants/theme";
+import { StyleSheet } from 'react-native';
+import { COLORS, SPACING, FONT_SIZES } from '@/constants/theme';
 
 export const studentProfileStyles = StyleSheet.create({
   card: {
@@ -10,7 +10,7 @@ export const studentProfileStyles = StyleSheet.create({
   },
   heading: {
     fontSize: FONT_SIZES.lg,
-    fontWeight: "600",
+    fontWeight: '600',
     color: COLORS.textPrimary,
     marginBottom: SPACING.md,
   },
@@ -26,7 +26,7 @@ export const studentProfileStyles = StyleSheet.create({
   },
   placeholder: {
     color: COLORS.textSecondary,
-    fontStyle: "italic",
+    fontStyle: 'italic',
   },
   editCard: {
     backgroundColor: COLORS.white,
@@ -48,8 +48,8 @@ export const studentProfileStyles = StyleSheet.create({
     marginTop: 0,
   },
   buttonRow: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
     gap: SPACING.sm,
     marginTop: SPACING.md,
   },
@@ -63,7 +63,7 @@ export const studentProfileStyles = StyleSheet.create({
   cancelText: {
     fontSize: FONT_SIZES.md,
     color: COLORS.textSecondary,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   saveBtn: {
     paddingVertical: SPACING.sm,
@@ -74,6 +74,6 @@ export const studentProfileStyles = StyleSheet.create({
   saveText: {
     fontSize: FONT_SIZES.md,
     color: COLORS.white,
-    fontWeight: "600",
+    fontWeight: '600',
   },
 });

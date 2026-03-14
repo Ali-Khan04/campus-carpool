@@ -1,41 +1,37 @@
-import DriverProfileEmpty from "@/components/driver/DriverProfileEmpty";
-import DriverProfileForm from "@/components/driver/DriverProfileForm";
-import DriverProfileView from "@/components/driver/DriverProfileView";
-import { COLORS } from "@/constants/theme";
-import { useProfile } from "@/hooks/ProfileContextHook";
-import { supabase } from "@/lib/supabase";
-import { driverProfileStyles as styles } from "@/styles/driverProfileStyles";
-import { useState } from "react";
-import { ActivityIndicator, Alert, View } from "react-native";
+import DriverProfileEmpty from '@/components/driver/DriverProfileEmpty';
+import DriverProfileForm from '@/components/driver/DriverProfileForm';
+import DriverProfileView from '@/components/driver/DriverProfileView';
+import { COLORS } from '@/constants/theme';
+import { useProfile } from '@/hooks/ProfileContextHook';
+import { supabase } from '@/lib/supabase';
+import { driverProfileStyles as styles } from '@/styles/driverProfileStyles';
+import { useState } from 'react';
+import { ActivityIndicator, Alert, View } from 'react-native';
 
 export default function DriverProfile() {
   const { driverProfile, isDriver, loading, dispatch, profile } = useProfile();
 
   const [driverProfileData, setDriverProfile] = useState({
-    car_model: driverProfile?.car_model ?? "",
-    car_color: driverProfile?.car_color ?? "",
-    car_plate: driverProfile?.car_plate ?? "",
+    car_model: driverProfile?.car_model ?? '',
+    car_color: driverProfile?.car_color ?? '',
+    car_plate: driverProfile?.car_plate ?? '',
     seats_available: driverProfile?.seats_available ?? 0,
-    license_number: driverProfile?.license_number ?? "",
+    license_number: driverProfile?.license_number ?? '',
   });
 
   const [editing, setEditing] = useState<boolean>(false);
 
   // handle driver profile data change
-  const handleDriverProfileData = (
-    field: keyof typeof driverProfileData,
-    value: string,
-  ) => {
+  const handleDriverProfileData = (field: keyof typeof driverProfileData, value: string) => {
     setDriverProfile((prev) => ({
       ...prev,
-      [field]: field === "seats_available" ? Number(value) : value,
+      [field]: field === 'seats_available' ? Number(value) : value,
     }));
   };
 
   // update or create driver profile
   const handleSubmit = async () => {
-    const { car_model, car_color, car_plate, seats_available, license_number } =
-      driverProfileData;
+    const { car_model, car_color, car_plate, seats_available, license_number } = driverProfileData;
 
     if (
       !car_model.trim() ||
@@ -45,60 +41,56 @@ export default function DriverProfile() {
       !seats_available ||
       seats_available <= 0
     ) {
-      Alert.alert(
-        "Incomplete Information",
-        "Please fill in all the fields before continuing.",
-      );
+      Alert.alert('Incomplete Information', 'Please fill in all the fields before continuing.');
       return;
     }
 
     try {
-    if (driverProfile?.id) {
-  // Update existing
-  const { data, error } = await supabase
-    .from("driver_profiles")
-    .update(driverProfileData)
-    .eq("id", profile?.id)
-    .select()
-    .single();
+      if (driverProfile?.id) {
+        // Update existing
+        const { data, error } = await supabase
+          .from('driver_profiles')
+          .update(driverProfileData)
+          .eq('id', profile?.id)
+          .select()
+          .single();
 
-  if (error) {
-    console.error("Update error:", error);
-    return;
-  }
-  dispatch({ type: "SET_DRIVER_PROFILE", payload: data }); 
-  Alert.alert("Your driver profile has been updated");
+        if (error) {
+          console.error('Update error:', error);
+          return;
+        }
+        dispatch({ type: 'SET_DRIVER_PROFILE', payload: data });
+        Alert.alert('Your driver profile has been updated');
+      } else {
+        // Insert new
+        const { data, error } = await supabase
+          .from('driver_profiles')
+          .insert({ id: profile?.id, ...driverProfileData })
+          .select()
+          .single();
 
-} else {
-  // Insert new
-  const { data, error } = await supabase
-    .from("driver_profiles")
-    .insert({ id: profile?.id, ...driverProfileData })
-    .select()  
-    .single(); 
-
-  if (error) {
-    console.error("Insert error:", error);
-    return;
-  }
-  dispatch({ type: "SET_DRIVER_PROFILE", payload: data });
-  Alert.alert("Your driver profile has been created.");
-}
+        if (error) {
+          console.error('Insert error:', error);
+          return;
+        }
+        dispatch({ type: 'SET_DRIVER_PROFILE', payload: data });
+        Alert.alert('Your driver profile has been created.');
+      }
 
       setEditing(false);
     } catch (error: any) {
-      console.error("Driver profile error:", error);
-      Alert.alert("Error", error.message || "Something went wrong.");
+      console.error('Driver profile error:', error);
+      Alert.alert('Error', error.message || 'Something went wrong.');
     }
   };
 
   const handleCancel = () => {
     setDriverProfile({
-      car_model: driverProfile?.car_model ?? "",
-      car_color: driverProfile?.car_color ?? "",
-      car_plate: driverProfile?.car_plate ?? "",
+      car_model: driverProfile?.car_model ?? '',
+      car_color: driverProfile?.car_color ?? '',
+      car_plate: driverProfile?.car_plate ?? '',
       seats_available: driverProfile?.seats_available ?? 0,
-      license_number: driverProfile?.license_number ?? "",
+      license_number: driverProfile?.license_number ?? '',
     });
     setEditing(false);
   };
@@ -126,10 +118,5 @@ export default function DriverProfile() {
     );
   }
 
-  return (
-    <DriverProfileView
-      driverProfile={driverProfile}
-      onEdit={() => setEditing(true)}
-    />
-  );
+  return <DriverProfileView driverProfile={driverProfile} onEdit={() => setEditing(true)} />;
 }

@@ -1,6 +1,6 @@
-import { View, TextInput, Pressable, Text } from "react-native";
-import { COLORS } from "@/constants/theme";
-import { studentProfileStyles as styles } from "@/styles/studentProfileStyles";
+import { View, TextInput, Pressable, Text } from 'react-native';
+import { COLORS } from '@/constants/theme';
+import { studentProfileStyles as styles } from '@/styles/studentProfileStyles';
 
 type FormData = {
   full_name: string;
@@ -15,18 +15,13 @@ type Props = {
   onCancel: () => void;
 };
 
-export default function StudentProfileForm({
-  formData,
-  onChange,
-  onSave,
-  onCancel,
-}: Props) {
+export default function StudentProfileForm({ formData, onChange, onSave, onCancel }: Props) {
   return (
     <View style={styles.editCard}>
       <TextInput
         style={[styles.input, styles.inputFirst]}
         value={formData.full_name}
-        onChangeText={(userInput) => onChange("full_name", userInput)}
+        onChangeText={(userInput) => onChange('full_name', userInput)}
         placeholder="Full name"
         placeholderTextColor={COLORS.textSecondary}
       />
@@ -34,7 +29,7 @@ export default function StudentProfileForm({
       <TextInput
         style={styles.input}
         value={formData.university_name}
-        onChangeText={(userInput) => onChange("university_name", userInput)}
+        onChangeText={(userInput) => onChange('university_name', userInput)}
         placeholder="University"
         placeholderTextColor={COLORS.textSecondary}
       />
@@ -42,7 +37,7 @@ export default function StudentProfileForm({
       <TextInput
         style={styles.input}
         value={formData.phone}
-        onChangeText={(userInput) => onChange("phone", userInput)}
+        onChangeText={(userInput) => onChange('phone', userInput)}
         placeholder="Phone"
         placeholderTextColor={COLORS.textSecondary}
         keyboardType="phone-pad"

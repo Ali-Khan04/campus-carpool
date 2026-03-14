@@ -1,23 +1,23 @@
-import { COLORS, SPACING, FONT_SIZES } from "@/constants/theme";
-import { StyleSheet } from "react-native";
+import { COLORS, SPACING, FONT_SIZES } from '@/constants/theme';
+import { StyleSheet } from 'react-native';
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: SPACING.lg,
   },
   title: {
     fontSize: FONT_SIZES.lg,
-    fontWeight: "600",
+    fontWeight: '600',
     color: COLORS.textPrimary,
     marginBottom: SPACING.xs,
   },
   subtitle: {
     fontSize: FONT_SIZES.md,
     color: COLORS.textSecondary,
-    textAlign: "center",
+    textAlign: 'center',
     marginBottom: SPACING.lg,
   },
   ctaButton: {
@@ -29,10 +29,10 @@ export const styles = StyleSheet.create({
   ctaText: {
     color: COLORS.white,
     fontSize: FONT_SIZES.md,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   logoutButton: {
-    position: "absolute",
+    position: 'absolute',
     top: SPACING.lg,
     right: SPACING.lg,
     paddingVertical: SPACING.sm,
@@ -44,6 +44,6 @@ export const styles = StyleSheet.create({
   logoutText: {
     color: COLORS.textSecondary,
     fontSize: FONT_SIZES.sm,
-    fontWeight: "500",
+    fontWeight: '500',
   },
 });

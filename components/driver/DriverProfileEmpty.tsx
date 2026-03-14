@@ -1,5 +1,5 @@
-import { View, Text, Pressable } from "react-native";
-import { driverProfileStyles as styles } from "@/styles/driverProfileStyles";
+import { View, Text, Pressable } from 'react-native';
+import { driverProfileStyles as styles } from '@/styles/driverProfileStyles';
 
 type Props = {
   onPress: () => void;

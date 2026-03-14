@@ -1,7 +1,7 @@
-import { createContext } from "react";
-import { Session, User } from "@supabase/supabase-js";
-import { DriverProfile, Profile } from "@/types/Profiles";
-import { ProfileAction } from "./ProfileProvider";
+import { createContext } from 'react';
+import { Session, User } from '@supabase/supabase-js';
+import { DriverProfile, Profile } from '@/types/Profiles';
+import { ProfileAction } from './ProfileProvider';
 
 interface ProfileContextType {
   profile: Profile | null;

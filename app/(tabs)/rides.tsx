@@ -1,12 +1,12 @@
-import CreateRideForm from "@/components/rides/CreateRideForm";
-import RequestRideModal from "@/components/rides/RequestRideModal";
-import RideCard from "@/components/rides/RideCard";
-import { COLORS, FONT_SIZES, SPACING } from "@/constants/theme";
-import { useProfile } from "@/hooks/ProfileContextHook";
-import { supabase } from "@/lib/supabase";
-import { Ride } from "@/types/Profiles";
-import { useFocusEffect } from "expo-router";
-import { useCallback, useState } from "react";
+import CreateRideForm from '@/components/rides/CreateRideForm';
+import RequestRideModal from '@/components/rides/RequestRideModal';
+import RideCard from '@/components/rides/RideCard';
+import { COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
+import { useProfile } from '@/hooks/ProfileContextHook';
+import { supabase } from '@/lib/supabase';
+import { Ride } from '@/types/Profiles';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -15,7 +15,7 @@ import {
   StyleSheet,
   Text,
   View,
-} from "react-native";
+} from 'react-native';
 
 export default function RidesScreen() {
   const { isDriver, session } = useProfile();
@@ -29,16 +29,13 @@ export default function RidesScreen() {
 
   const fetchRides = async () => {
     setLoading(true);
-    let query = supabase
-      .from("rides")
-      .select("*")
-      .order("departure_time", { ascending: true });
+    let query = supabase.from('rides').select('*').order('departure_time', { ascending: true });
 
     // Drivers can see only their rides and students can see all rides
     if (isDriver) {
-      query = query.eq("driver_id", session!.user.id);
+      query = query.eq('driver_id', session!.user.id);
     } else {
-      query = query.eq("status", "active").gt("seats_available", 0);
+      query = query.eq('status', 'active').gt('seats_available', 0);
     }
 
     const { data, error } = await query;
@@ -83,7 +80,7 @@ export default function RidesScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>{isDriver ? "My Rides" : "Available Rides"}</Text>
+        <Text style={styles.title}>{isDriver ? 'My Rides' : 'Available Rides'}</Text>
         {isDriver && (
           <Pressable style={styles.createBtn} onPress={() => setShowCreateForm(true)}>
             <Text style={styles.createBtnText}>+ New Ride</Text>
@@ -102,13 +99,13 @@ export default function RidesScreen() {
           renderItem={({ item }) => (
             <RideCard
               ride={item}
-              actionLabel={isDriver ? undefined : "Request Ride"}
+              actionLabel={isDriver ? undefined : 'Request Ride'}
               onAction={isDriver ? undefined : handleRequestRide}
             />
           )}
           ListEmptyComponent={
             <Text style={styles.empty}>
-              {isDriver ? "No rides posted yet." : "No rides available right now."}
+              {isDriver ? 'No rides posted yet.' : 'No rides available right now.'}
             </Text>
           }
         />
@@ -130,15 +127,15 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: SPACING.md,
     paddingTop: SPACING.lg,
   },
   title: {
     fontSize: FONT_SIZES.lg,
-    fontWeight: "700",
+    fontWeight: '700',
     color: COLORS.textPrimary,
   },
   createBtn: {
@@ -149,14 +146,14 @@ const styles = StyleSheet.create({
   },
   createBtnText: {
     color: COLORS.white,
-    fontWeight: "600",
+    fontWeight: '600',
     fontSize: FONT_SIZES.sm,
   },
   list: {
     padding: SPACING.md,
   },
   empty: {
-    textAlign: "center",
+    textAlign: 'center',
     color: COLORS.textSecondary,
     marginTop: SPACING.xl,
     fontSize: FONT_SIZES.md,
@@ -168,6 +165,6 @@ const styles = StyleSheet.create({
   backText: {
     color: COLORS.primary,
     fontSize: FONT_SIZES.sm,
-    fontWeight: "600",
+    fontWeight: '600',
   },
 });

@@ -1,7 +1,7 @@
-import { COLORS, FONT_SIZES, SPACING } from "@/constants/theme";
-import { Ride } from "@/types/Profiles";
+import { COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
+import { Ride } from '@/types/Profiles';
 //import { getLocationLabel } from "@/utils/locationLabelCache";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 interface Props {
   ride: Ride;
@@ -10,9 +10,7 @@ interface Props {
   disabled?: boolean;
 }
 
-const formatCoordinates = (lat: number, lng: number) =>
-  `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-
+const formatCoordinates = (lat: number, lng: number) => `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 
 /*const reverseGeocode = async (lat: number, lng: number) => {
   const key = `${lat.toFixed(5)},${lng.toFixed(5)}`;
@@ -35,12 +33,7 @@ const formatCoordinates = (lat: number, lng: number) =>
   return label;
 };*/
 
-export default function RideCard({
-  ride,
-  actionLabel,
-  onAction,
-  disabled,
-}: Props) {
+export default function RideCard({ ride, actionLabel, onAction, disabled }: Props) {
   const departure = new Date(ride.departure_time).toLocaleString();
 
   // Read from shared cache at render time
@@ -102,7 +95,6 @@ export default function RideCard({
   }, [
     
   ]);*/
- 
 
   return (
     <View style={styles.card}>
@@ -124,9 +116,7 @@ export default function RideCard({
       </View>
       <View style={styles.row}>
         <Text style={styles.label}>Status</Text>
-        <Text style={[styles.badge, styles[ride.status] ?? styles.active]}>
-          {ride.status}
-        </Text>
+        <Text style={[styles.badge, styles[ride.status] ?? styles.active]}>{ride.status}</Text>
       </View>
 
       {actionLabel && onAction && (
@@ -153,9 +143,9 @@ const styles = StyleSheet.create({
     gap: SPACING.xs,
   },
   row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   label: {
     fontSize: FONT_SIZES.sm,
@@ -164,9 +154,9 @@ const styles = StyleSheet.create({
   value: {
     fontSize: FONT_SIZES.sm,
     color: COLORS.textPrimary,
-    fontWeight: "500",
+    fontWeight: '500',
     flexShrink: 1,
-    textAlign: "right",
+    textAlign: 'right',
     marginLeft: SPACING.sm,
   },
   badge: {
@@ -174,26 +164,26 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 99,
     fontSize: FONT_SIZES.sm,
-    fontWeight: "600",
-    overflow: "hidden",
+    fontWeight: '600',
+    overflow: 'hidden',
   },
-  active: { backgroundColor: "#D1FAE5", color: "#065F46" },
-  full: { backgroundColor: "#FEF3C7", color: "#92400E" },
-  completed: { backgroundColor: "#E5E7EB", color: "#374151" },
-  cancelled: { backgroundColor: "#FEE2E2", color: "#991B1B" },
+  active: { backgroundColor: '#D1FAE5', color: '#065F46' },
+  full: { backgroundColor: '#FEF3C7', color: '#92400E' },
+  completed: { backgroundColor: '#E5E7EB', color: '#374151' },
+  cancelled: { backgroundColor: '#FEE2E2', color: '#991B1B' },
   button: {
     marginTop: SPACING.sm,
     backgroundColor: COLORS.primary,
     padding: SPACING.sm,
     borderRadius: 8,
-    alignItems: "center",
+    alignItems: 'center',
   },
   buttonDisabled: {
     backgroundColor: COLORS.border,
   },
   buttonText: {
     color: COLORS.white,
-    fontWeight: "600",
+    fontWeight: '600',
     fontSize: FONT_SIZES.sm,
   },
 });

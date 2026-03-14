@@ -1,14 +1,14 @@
 // dummy index as a placeholder while we check auth state in _layout.tsx
-import { View, ActivityIndicator } from "react-native";
-import { COLORS } from "@/constants/theme";
+import { View, ActivityIndicator } from 'react-native';
+import { COLORS } from '@/constants/theme';
 
 export default function Index() {
   return (
     <View
       style={{
         flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
+        justifyContent: 'center',
+        alignItems: 'center',
         backgroundColor: COLORS.background,
       }}
     >

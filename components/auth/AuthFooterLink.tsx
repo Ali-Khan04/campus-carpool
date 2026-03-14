@@ -1,7 +1,7 @@
-import { Pressable, Text } from "react-native";
-import { router } from "expo-router";
-import { authStyles } from "@/styles/authStyles";
-import { Href } from "expo-router";
+import { Pressable, Text } from 'react-native';
+import { router } from 'expo-router';
+import { authStyles } from '@/styles/authStyles';
+import { Href } from 'expo-router';
 
 type Props = {
   label: string;

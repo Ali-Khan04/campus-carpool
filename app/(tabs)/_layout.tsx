@@ -1,20 +1,20 @@
-import { COLORS } from "@/constants/theme";
-import { Ionicons } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
+import { COLORS } from '@/constants/theme';
+import { Ionicons } from '@expo/vector-icons';
+import { Tabs } from 'expo-router';
 
 export default function TabsNavigation() {
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: COLORS.primary,
-        tabBarInactiveTintColor: "#9CA3AF",
+        tabBarInactiveTintColor: '#9CA3AF',
         headerShown: false,
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
+          title: 'Home',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home-outline" size={size} color={color} />
           ),
@@ -23,7 +23,7 @@ export default function TabsNavigation() {
       <Tabs.Screen
         name="rides"
         options={{
-          title: "Rides",
+          title: 'Rides',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="car-outline" size={size} color={color} />
           ),
@@ -32,7 +32,7 @@ export default function TabsNavigation() {
       <Tabs.Screen
         name="map"
         options={{
-          title: "Map",
+          title: 'Map',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="map-outline" size={size} color={color} />
           ),
@@ -41,7 +41,7 @@ export default function TabsNavigation() {
       <Tabs.Screen
         name="profiles/index"
         options={{
-          title: "Profile",
+          title: 'Profile',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person-outline" size={size} color={color} />
           ),

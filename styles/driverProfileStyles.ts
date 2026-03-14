@@ -1,5 +1,5 @@
-import { StyleSheet } from "react-native";
-import { COLORS, SPACING, FONT_SIZES } from "@/constants/theme";
+import { StyleSheet } from 'react-native';
+import { COLORS, SPACING, FONT_SIZES } from '@/constants/theme';
 
 export const driverProfileStyles = StyleSheet.create({
   card: {
@@ -10,7 +10,7 @@ export const driverProfileStyles = StyleSheet.create({
   },
   heading: {
     fontSize: FONT_SIZES.lg,
-    fontWeight: "600",
+    fontWeight: '600',
     color: COLORS.textPrimary,
     marginBottom: SPACING.md,
   },
@@ -26,11 +26,11 @@ export const driverProfileStyles = StyleSheet.create({
   },
   placeholder: {
     color: COLORS.textSecondary,
-    fontStyle: "italic",
+    fontStyle: 'italic',
   },
   input: {
     borderWidth: 1,
-    borderColor: COLORS.textSecondary + "40",
+    borderColor: COLORS.textSecondary + '40',
     borderRadius: 8,
     padding: SPACING.sm,
     fontSize: FONT_SIZES.md,
@@ -38,15 +38,15 @@ export const driverProfileStyles = StyleSheet.create({
     marginTop: 4,
   },
   buttonRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginTop: SPACING.lg,
   },
   button: {
     flex: 1,
     padding: SPACING.sm,
     borderRadius: 8,
-    alignItems: "center",
+    alignItems: 'center',
   },
   saveButton: {
     backgroundColor: COLORS.primary,
@@ -57,6 +57,6 @@ export const driverProfileStyles = StyleSheet.create({
   },
   buttonText: {
     color: COLORS.white,
-    fontWeight: "600",
+    fontWeight: '600',
   },
 });

@@ -1,7 +1,7 @@
-import { View, Text, TextInput, Pressable } from "react-native";
-import { COLORS } from "@/constants/theme";
-import { AuthInput } from "@/types/AuthInput";
-import { authStyles } from "@/styles/authStyles";
+import { View, Text, TextInput, Pressable } from 'react-native';
+import { COLORS } from '@/constants/theme';
+import { AuthInput } from '@/types/AuthInput';
+import { authStyles } from '@/styles/authStyles';
 
 type Props = {
   title: string;
@@ -36,7 +36,7 @@ export default function AuthForm({
         placeholderTextColor={COLORS.textSecondary}
         autoCapitalize="none"
         keyboardType="email-address"
-        onChangeText={(text) => onChange("email", text)}
+        onChangeText={(text) => onChange('email', text)}
       />
 
       <TextInput
@@ -45,7 +45,7 @@ export default function AuthForm({
         placeholder="Password"
         placeholderTextColor={COLORS.textSecondary}
         secureTextEntry
-        onChangeText={(text) => onChange("password", text)}
+        onChangeText={(text) => onChange('password', text)}
       />
 
       <Pressable
@@ -53,9 +53,7 @@ export default function AuthForm({
         onPress={onSubmit}
         disabled={loading}
       >
-        <Text style={authStyles.buttonText}>
-          {loading ? loadingLabel : submitLabel}
-        </Text>
+        <Text style={authStyles.buttonText}>{loading ? loadingLabel : submitLabel}</Text>
       </Pressable>
     </View>
   );

@@ -1,5 +1,5 @@
-import { View, Text } from "react-native";
-import { studentProfileStyles as styles } from "@/styles/studentProfileStyles";
+import { View, Text } from 'react-native';
+import { studentProfileStyles as styles } from '@/styles/studentProfileStyles';
 
 export default function StudentProfileEmpty() {
   return (

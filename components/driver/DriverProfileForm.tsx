@@ -1,5 +1,5 @@
-import { View, Text, TextInput, Pressable } from "react-native";
-import { driverProfileStyles as styles } from "@/styles/driverProfileStyles";
+import { View, Text, TextInput, Pressable } from 'react-native';
+import { driverProfileStyles as styles } from '@/styles/driverProfileStyles';
 
 type DriverFormData = {
   car_model: string;
@@ -16,12 +16,7 @@ type Props = {
   onCancel: () => void;
 };
 
-export default function DriverProfileForm({
-  formData,
-  onChange,
-  onSave,
-  onCancel,
-}: Props) {
+export default function DriverProfileForm({ formData, onChange, onSave, onCancel }: Props) {
   return (
     <View style={styles.card}>
       <Text style={styles.heading}>Edit Driver Profile</Text>
@@ -31,7 +26,7 @@ export default function DriverProfileForm({
         style={styles.input}
         value={formData.car_model}
         placeholder="Enter car model"
-        onChangeText={(text) => onChange("car_model", text)}
+        onChangeText={(text) => onChange('car_model', text)}
       />
 
       <Text style={styles.label}>Car Color</Text>
@@ -39,7 +34,7 @@ export default function DriverProfileForm({
         style={styles.input}
         value={formData.car_color}
         placeholder="Enter car color"
-        onChangeText={(text) => onChange("car_color", text)}
+        onChangeText={(text) => onChange('car_color', text)}
       />
 
       <Text style={styles.label}>Car Plate</Text>
@@ -48,7 +43,7 @@ export default function DriverProfileForm({
         value={formData.car_plate}
         placeholder="Enter car plate"
         autoCapitalize="characters"
-        onChangeText={(text) => onChange("car_plate", text)}
+        onChangeText={(text) => onChange('car_plate', text)}
       />
 
       <Text style={styles.label}>Seats Available</Text>
@@ -57,7 +52,7 @@ export default function DriverProfileForm({
         value={String(formData.seats_available)}
         placeholder="Enter seats available"
         keyboardType="numeric"
-        onChangeText={(text) => onChange("seats_available", text)}
+        onChangeText={(text) => onChange('seats_available', text)}
       />
 
       <Text style={styles.label}>License Number</Text>
@@ -65,14 +60,11 @@ export default function DriverProfileForm({
         style={styles.input}
         value={formData.license_number}
         placeholder="Enter license number"
-        onChangeText={(text) => onChange("license_number", text)}
+        onChangeText={(text) => onChange('license_number', text)}
       />
 
       <View style={styles.buttonRow}>
-        <Pressable
-          style={[styles.button, styles.cancelButton]}
-          onPress={onCancel}
-        >
+        <Pressable style={[styles.button, styles.cancelButton]} onPress={onCancel}>
           <Text style={styles.buttonText}>Cancel</Text>
         </Pressable>
         <Pressable style={[styles.button, styles.saveButton]} onPress={onSave}>

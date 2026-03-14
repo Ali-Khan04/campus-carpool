@@ -1,14 +1,14 @@
-import { View, ActivityIndicator } from "react-native";
-import { useState, useEffect } from "react";
-import { COLORS } from "@/constants/theme";
-import { useProfile } from "@/hooks/ProfileContextHook";
-import { supabase } from "@/lib/supabase";
-import { Alert } from "react-native";
-import { studentProfileStyles as styles } from "@/styles/studentProfileStyles";
-import StudentProfileEmpty from "@/components/student/StudentProfileEmpty";
-import StudentProfileView from "@/components/student/StudentProfileView";
-import StudentProfileForm from "@/components/student/StudentProfileForm";
-import { cleanValue } from "@/utils/cleanValue";
+import { View, ActivityIndicator } from 'react-native';
+import { useState, useEffect } from 'react';
+import { COLORS } from '@/constants/theme';
+import { useProfile } from '@/hooks/ProfileContextHook';
+import { supabase } from '@/lib/supabase';
+import { Alert } from 'react-native';
+import { studentProfileStyles as styles } from '@/styles/studentProfileStyles';
+import StudentProfileEmpty from '@/components/student/StudentProfileEmpty';
+import StudentProfileView from '@/components/student/StudentProfileView';
+import StudentProfileForm from '@/components/student/StudentProfileForm';
+import { cleanValue } from '@/utils/cleanValue';
 
 export default function StudentProfile() {
   const { profile, loading, dispatch } = useProfile();
@@ -45,34 +45,31 @@ export default function StudentProfile() {
       !full_name ||
       !university_name ||
       !phone ||
-      full_name.trim() === "" ||
-      university_name.trim() === "" ||
-      phone.trim() === ""
+      full_name.trim() === '' ||
+      university_name.trim() === '' ||
+      phone.trim() === ''
     ) {
-      Alert.alert(
-        "Incomplete Information",
-        "Please fill in all the fields before continuing.",
-      );
+      Alert.alert('Incomplete Information', 'Please fill in all the fields before continuing.');
       return;
     }
 
     const { error } = await supabase
-      .from("profiles")
+      .from('profiles')
       .update({
         full_name: profileData.full_name,
         university_name: profileData.university_name,
         phone: profileData.phone,
       })
-      .eq("id", profile.id);
+      .eq('id', profile.id);
 
     if (error) {
       console.error(error);
-      Alert.alert("Error", "Failed to update profile. Please try again.");
+      Alert.alert('Error', 'Failed to update profile. Please try again.');
       return;
     }
 
     dispatch({
-      type: "UPDATE_PROFILE",
+      type: 'UPDATE_PROFILE',
       payload: {
         full_name: profileData.full_name,
         university_name: profileData.university_name,
@@ -80,7 +77,7 @@ export default function StudentProfile() {
       },
     });
 
-    Alert.alert("Success", "Your profile has been updated.");
+    Alert.alert('Success', 'Your profile has been updated.');
     setEditing(false);
   };
 
