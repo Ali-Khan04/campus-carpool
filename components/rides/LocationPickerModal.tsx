@@ -25,6 +25,9 @@ export interface PickedLocation {
 interface Props {
   visible: boolean;
   onClose: () => void;
+  // mode='full' (default): pickup + destination, used by CreateRideForm
+  // mode='single': single pin only (meetup), used by RequestRideModal
+  mode?: 'single' | 'full';
   onConfirm: (pickup: PickedLocation, destination: PickedLocation) => void;
 }
 
@@ -37,7 +40,7 @@ interface SearchResult {
 
 type ActivePin = 'pickup' | 'destination';
 
-export default function LocationPickerModal({ visible, onClose, onConfirm }: Props) {
+export default function LocationPickerModal({ visible, onClose, onConfirm, mode = 'full' }: Props) {
   const [activePin, setActivePin] = useState<ActivePin>('pickup');
   const [pickup, setPickup] = useState<PickedLocation | null>(null);
   const [destination, setDestination] = useState<PickedLocation | null>(null);
@@ -101,8 +104,8 @@ export default function LocationPickerModal({ visible, onClose, onConfirm }: Pro
 
         if (activePin === 'pickup') {
           setPickup(loc);
-          // Auto switch to destination after pickup is set
-          if (!destination) setActivePin('destination');
+          // Auto switch to destination after pickup is set — only in full mode
+          if (mode === 'full' && !destination) setActivePin('destination');
         } else {
           setDestination(loc);
         }
@@ -115,7 +118,8 @@ export default function LocationPickerModal({ visible, onClose, onConfirm }: Pro
         };
         if (activePin === 'pickup') {
           setPickup(loc);
-          if (!destination) setActivePin('destination');
+          // Auto switch to destination after pickup is set — only in full mode
+          if (mode === 'full' && !destination) setActivePin('destination');
         } else {
           setDestination(loc);
         }
@@ -123,10 +127,15 @@ export default function LocationPickerModal({ visible, onClose, onConfirm }: Pro
   };
 
   const handleConfirm = () => {
-    if (!pickup || !destination) {
-      return;
+    // In single mode only pickup is required
+    // In full mode both pickup and destination are required
+    if (mode === 'single') {
+      if (!pickup) return;
+      onConfirm(pickup, pickup); // destination unused in single mode, pass pickup as placeholder
+    } else {
+      if (!pickup || !destination) return;
+      onConfirm(pickup, destination);
     }
-    onConfirm(pickup, destination);
     onClose();
   };
 
@@ -138,6 +147,9 @@ export default function LocationPickerModal({ visible, onClose, onConfirm }: Pro
     setActivePin('pickup');
     onClose();
   };
+
+  // Confirm button disabled logic differs per mode
+  const confirmDisabled = mode === 'single' ? !pickup : !pickup || !destination;
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={handleClose}>
@@ -151,48 +163,58 @@ export default function LocationPickerModal({ visible, onClose, onConfirm }: Pro
             <Pressable onPress={handleClose} style={styles.closeBtn}>
               <Ionicons name="close" size={22} color={COLORS.textPrimary} />
             </Pressable>
-            <Text style={styles.headerTitle}>Set Locations</Text>
+            <Text style={styles.headerTitle}>
+              {/* Title reflects what is being picked */}
+              {mode === 'single' ? 'Set Meetup Point' : 'Set Locations'}
+            </Text>
             <Pressable
-              style={[styles.confirmBtn, (!pickup || !destination) && styles.confirmDisabled]}
+              style={[styles.confirmBtn, confirmDisabled && styles.confirmDisabled]}
               onPress={handleConfirm}
-              disabled={!pickup || !destination}
+              disabled={confirmDisabled}
             >
               <Text style={styles.confirmText}>Confirm</Text>
             </Pressable>
           </View>
 
-          {/* Pin toggle */}
-          <View style={styles.pinToggle}>
-            <Pressable
-              style={[styles.pinBtn, activePin === 'pickup' && styles.pinBtnActive]}
-              onPress={() => setActivePin('pickup')}
-            >
-              <Ionicons
-                name="radio-button-on"
-                size={16}
-                color={activePin === 'pickup' ? COLORS.white : COLORS.primary}
-              />
-              <Text style={[styles.pinBtnText, activePin === 'pickup' && styles.pinBtnTextActive]}>
-                {pickup ? pickup.label : 'Set Pickup'}
-              </Text>
-            </Pressable>
-
-            <Pressable
-              style={[styles.pinBtn, activePin === 'destination' && styles.pinBtnDestActive]}
-              onPress={() => setActivePin('destination')}
-            >
-              <Ionicons
-                name="location"
-                size={16}
-                color={activePin === 'destination' ? COLORS.white : '#EF4444'}
-              />
-              <Text
-                style={[styles.pinBtnText, activePin === 'destination' && styles.pinBtnTextActive]}
+          {/* Pin toggle hidden in single mode, only one pin needed */}
+          {mode === 'full' && (
+            <View style={styles.pinToggle}>
+              <Pressable
+                style={[styles.pinBtn, activePin === 'pickup' && styles.pinBtnActive]}
+                onPress={() => setActivePin('pickup')}
               >
-                {destination ? destination.label : 'Set Destination'}
-              </Text>
-            </Pressable>
-          </View>
+                <Ionicons
+                  name="radio-button-on"
+                  size={16}
+                  color={activePin === 'pickup' ? COLORS.white : COLORS.primary}
+                />
+                <Text
+                  style={[styles.pinBtnText, activePin === 'pickup' && styles.pinBtnTextActive]}
+                >
+                  {pickup ? pickup.label : 'Set Pickup'}
+                </Text>
+              </Pressable>
+
+              <Pressable
+                style={[styles.pinBtn, activePin === 'destination' && styles.pinBtnDestActive]}
+                onPress={() => setActivePin('destination')}
+              >
+                <Ionicons
+                  name="location"
+                  size={16}
+                  color={activePin === 'destination' ? COLORS.white : '#EF4444'}
+                />
+                <Text
+                  style={[
+                    styles.pinBtnText,
+                    activePin === 'destination' && styles.pinBtnTextActive,
+                  ]}
+                >
+                  {destination ? destination.label : 'Set Destination'}
+                </Text>
+              </Pressable>
+            </View>
+          )}
 
           {/* Search bar */}
           <View style={styles.searchContainer}>
@@ -204,7 +226,11 @@ export default function LocationPickerModal({ visible, onClose, onConfirm }: Pro
             />
             <TextInput
               style={styles.searchInput}
-              placeholder={`Search ${activePin === 'pickup' ? 'pickup' : 'destination'}...`}
+              placeholder={
+                mode === 'single'
+                  ? 'Search meetup point...'
+                  : `Search ${activePin === 'pickup' ? 'pickup' : 'destination'}...`
+              }
               value={searchQuery}
               onChangeText={(t) => {
                 setSearchQuery(t);
@@ -241,13 +267,15 @@ export default function LocationPickerModal({ visible, onClose, onConfirm }: Pro
                 ? [
                     {
                       coordinate: { latitude: pickup.lat, longitude: pickup.lng },
-                      title: 'Pickup',
+                      // Label differs per mode
+                      title: mode === 'single' ? 'Meetup' : 'Pickup',
                       description: pickup.label,
                       pinColor: COLORS.primary,
                     },
                   ]
                 : []),
-              ...(destination
+              // Destination marker only shown in full mode
+              ...(mode === 'full' && destination
                 ? [
                     {
                       coordinate: { latitude: destination.lat, longitude: destination.lng },
@@ -265,7 +293,11 @@ export default function LocationPickerModal({ visible, onClose, onConfirm }: Pro
             <Text style={styles.hintText}>
               Tap on map or search to place{' '}
               <Text style={{ fontWeight: '700' }}>
-                {activePin === 'pickup' ? 'pickup (blue)' : 'destination (red)'}
+                {mode === 'single'
+                  ? 'meetup point (blue)'
+                  : activePin === 'pickup'
+                    ? 'pickup (blue)'
+                    : 'destination (red)'}
               </Text>
             </Text>
           </View>

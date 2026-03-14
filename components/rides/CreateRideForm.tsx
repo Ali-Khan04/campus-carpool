@@ -64,6 +64,8 @@ export default function CreateRideForm({ onRideCreated }: Props) {
       destination_lng: destination.lng,
       seats_available: parseInt(seats),
       departure_time: departureDate.toISOString(),
+      pickup_label: pickup.label,
+      destination_label: destination.label,
       status: 'active',
     });
     setLoading(false);

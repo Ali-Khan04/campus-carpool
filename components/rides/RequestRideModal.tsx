@@ -39,13 +39,20 @@ export default function RequestRideModal({ ride, visible, onClose, onRequested }
       return;
     }
 
+    // Meetup is now mandatory
+    if (!meetupLocation) {
+      Alert.alert('Error', 'Please set a meetup point so the driver knows where to pick you up.');
+      return;
+    }
+
     setLoading(true);
     const { error } = await supabase.from('ride_requests').insert({
       ride_id: ride.id,
       student_id: session.user.id,
       seats_requested: seatsNum,
-      meetup_lat: meetupLocation?.lat ?? null,
-      meetup_lng: meetupLocation?.lng ?? null,
+      meetup_lat: meetupLocation.lat,
+      meetup_lng: meetupLocation.lng,
+      meetup_label: meetupLocation.label,
       status: 'pending',
     });
     setLoading(false);
@@ -66,6 +73,8 @@ export default function RequestRideModal({ ride, visible, onClose, onRequested }
     setMeetupLocation(null);
     onClose();
   };
+
+  const confirmDisabled = loading || !meetupLocation;
 
   return (
     <>
@@ -89,8 +98,8 @@ export default function RequestRideModal({ ride, visible, onClose, onRequested }
               onChangeText={setSeats}
             />
 
-            {/* Meetup location picker */}
-            <Text style={styles.label}>Meetup Point (optional)</Text>
+            {/* Meetup location picker*/}
+            <Text style={styles.label}>Meetup Point</Text>
             <Pressable style={styles.mapPickerBtn} onPress={() => setMapVisible(true)}>
               <Ionicons name="map-outline" size={18} color={COLORS.primary} />
               <Text style={styles.mapPickerText} numberOfLines={1}>
@@ -107,7 +116,11 @@ export default function RequestRideModal({ ride, visible, onClose, onRequested }
               <Pressable style={styles.cancelBtn} onPress={handleClose}>
                 <Text style={styles.cancelText}>Cancel</Text>
               </Pressable>
-              <Pressable style={styles.confirmBtn} onPress={handleRequest} disabled={loading}>
+              <Pressable
+                style={[styles.confirmBtn, confirmDisabled && styles.confirmBtnDisabled]}
+                onPress={handleRequest}
+                disabled={confirmDisabled}
+              >
                 {loading ? (
                   <ActivityIndicator color={COLORS.white} />
                 ) : (
@@ -121,6 +134,7 @@ export default function RequestRideModal({ ride, visible, onClose, onRequested }
 
       <LocationPickerModal
         visible={mapVisible}
+        mode="single"
         onClose={() => setMapVisible(false)}
         onConfirm={(p) => {
           setMeetupLocation(p);
@@ -208,6 +222,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: COLORS.primary,
     alignItems: 'center',
+  },
+  confirmBtnDisabled: {
+    backgroundColor: COLORS.border,
   },
   confirmText: {
     color: COLORS.white,

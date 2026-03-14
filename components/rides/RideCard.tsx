@@ -9,10 +9,10 @@ interface Props {
   onAction?: (ride: Ride) => void;
   disabled?: boolean;
 }
-
+/*
 const formatCoordinates = (lat: number, lng: number) => `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 
-/*const reverseGeocode = async (lat: number, lng: number) => {
+const reverseGeocode = async (lat: number, lng: number) => {
   const key = `${lat.toFixed(5)},${lng.toFixed(5)}`;
 
   const response = await fetch(
@@ -53,11 +53,11 @@ export default function RideCard({ ride, actionLabel, onAction, disabled }: Prop
   const [destinationLabel, setDestinationLabel] = useState(
     
       formatCoordinates(ride.destination_lat, ride.destination_lng),
-  );*/
+  );
   const pickupLabel = formatCoordinates(ride.pickup_lat, ride.pickup_lng);
   const destinationLabel = formatCoordinates(ride.destination_lat, ride.destination_lng);
 
-  /*useEffect(() => {
+  useEffect(() => {
     // skip the Nominatim network call entirely if both labels are already cached
     //if (cachedPickup && cachedDestination) return;
 
@@ -100,11 +100,11 @@ export default function RideCard({ ride, actionLabel, onAction, disabled }: Prop
     <View style={styles.card}>
       <View style={styles.row}>
         <Text style={styles.label}>Pickup</Text>
-        <Text style={styles.value}>{pickupLabel}</Text>
+        <Text style={styles.value}>{ride.pickup_label}</Text>
       </View>
       <View style={styles.row}>
         <Text style={styles.label}>Destination</Text>
-        <Text style={styles.value}>{destinationLabel}</Text>
+        <Text style={styles.value}>{ride.destination_label}</Text>
       </View>
       <View style={styles.row}>
         <Text style={styles.label}>Departure</Text>

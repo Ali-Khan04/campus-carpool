@@ -31,6 +31,8 @@ export interface Ride {
   departure_time: string;
   status: 'active' | 'full' | 'completed' | 'cancelled';
   created_at?: string;
+  pickup_label?: string;
+  destination_label?: string;
 }
 
 export interface RideRequest {
@@ -42,4 +44,5 @@ export interface RideRequest {
   meetup_lng?: number;
   status: 'pending' | 'accepted' | 'rejected' | 'cancelled';
   created_at?: string;
+  meetup_label?: string;
 }
