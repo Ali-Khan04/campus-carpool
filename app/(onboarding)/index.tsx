@@ -11,7 +11,10 @@ export default function RoleSelectionScreen() {
   const handleRoleSelect = async (role: 'student' | 'driver') => {
     if (!session?.user?.id) return;
 
-    const { error } = await supabase.from('profiles').update({ role }).eq('id', session.user.id);
+    const { error } = await supabase
+      .from('profiles')
+      .upsert({ id: session.user.id, email: session.user.email, role })
+      .eq('id', session.user.id);
 
     if (error) {
       console.error(error);

@@ -1,3 +1,4 @@
+import SwitchModeButton from '@/components/mode/SwitchModeButton';
 import { COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
 import { useProfile } from '@/hooks/ProfileContextHook';
 import { supabase } from '@/lib/supabase';
@@ -16,7 +17,7 @@ import {
 } from 'react-native';
 
 export default function HomeScreen() {
-  const { profile, isDriver, session } = useProfile();
+  const { profile, activeMode, session } = useProfile();
 
   const handleLogout = async () => {
     Alert.alert('Logout', 'Are you sure?', [
@@ -40,16 +41,19 @@ export default function HomeScreen() {
             {`Hey, ${profile?.full_name?.split(' ')[0] ?? 'there'} 👋`}
           </Text>
           <Text style={styles.subGreeting}>
-            {isDriver ? 'Ready to give a ride?' : 'Need a ride today?'}
+            {activeMode === 'driver' ? 'Ready to give a ride?' : 'Need a ride today?'}
           </Text>
         </View>
-        <Pressable onPress={handleLogout} style={styles.logoutBtn}>
-          <Ionicons name="log-out-outline" size={22} color={COLORS.textSecondary} />
-        </Pressable>
+        <View style={styles.headerActions}>
+          <SwitchModeButton />
+          <Pressable onPress={handleLogout} style={styles.logoutBtn}>
+            <Ionicons name="log-out-outline" size={22} color={COLORS.textSecondary} />
+          </Pressable>
+        </View>
       </View>
 
       {session?.user?.id &&
-        (isDriver ? (
+        (activeMode === 'driver' ? (
           <DriverDashboard userId={session.user.id} />
         ) : (
           <StudentDashboard userId={session.user.id} />
@@ -243,6 +247,11 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.sm,
     color: COLORS.textSecondary,
     marginTop: 2,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
   },
   logoutBtn: { padding: SPACING.xs },
   dashContainer: { gap: SPACING.md },

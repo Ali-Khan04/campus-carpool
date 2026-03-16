@@ -5,7 +5,8 @@ import { COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
 import { useProfile } from '@/hooks/ProfileContextHook';
 import { supabase } from '@/lib/supabase';
 import { Ride } from '@/types/Profiles';
-import { useFocusEffect } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
@@ -18,7 +19,8 @@ import {
 } from 'react-native';
 
 export default function RidesScreen() {
-  const { isDriver, session } = useProfile();
+  const { activeMode, session, isDriver } = useProfile();
+  const isDriverMode = activeMode === 'driver';
 
   const [rides, setRides] = useState<Ride[]>([]);
   const [loading, setLoading] = useState(false);
@@ -31,8 +33,7 @@ export default function RidesScreen() {
     setLoading(true);
     let query = supabase.from('rides').select('*').order('departure_time', { ascending: true });
 
-    // Drivers can see only their rides and students can see all rides
-    if (isDriver) {
+    if (isDriverMode) {
       query = query.eq('driver_id', session!.user.id);
     } else {
       query = query.eq('status', 'active').gt('seats_available', 0);
@@ -53,7 +54,7 @@ export default function RidesScreen() {
   useFocusEffect(
     useCallback(() => {
       fetchRides();
-    }, [isDriver])
+    }, [isDriverMode])
   );
 
   const handleRequestRide = (ride: Ride) => {
@@ -61,7 +62,7 @@ export default function RidesScreen() {
     setModalVisible(true);
   };
 
-  if (isDriver && showCreateForm) {
+  if (isDriverMode && showCreateForm) {
     return (
       <View style={{ flex: 1 }}>
         <Pressable style={styles.backBtn} onPress={() => setShowCreateForm(false)}>
@@ -80,8 +81,8 @@ export default function RidesScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>{isDriver ? 'My Rides' : 'Available Rides'}</Text>
-        {isDriver && (
+        <Text style={styles.title}>{isDriverMode ? 'My Rides' : 'Available Rides'}</Text>
+        {isDriverMode && (
           <Pressable style={styles.createBtn} onPress={() => setShowCreateForm(true)}>
             <Text style={styles.createBtnText}>+ New Ride</Text>
           </Pressable>
@@ -95,17 +96,34 @@ export default function RidesScreen() {
           data={rides}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
+          ListHeaderComponent={
+            !isDriverMode && !isDriver ? (
+              <Pressable
+                style={styles.driverBanner}
+                onPress={() => router.push('/(tabs)/profiles/driverProfile')}
+              >
+                <Ionicons name="car-sport-outline" size={20} color={COLORS.primary} />
+                <View style={styles.driverBannerText}>
+                  <Text style={styles.driverBannerTitle}>Want to offer rides?</Text>
+                  <Text style={styles.driverBannerDesc}>
+                    Complete your driver profile to start posting rides
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={COLORS.primary} />
+              </Pressable>
+            ) : null
+          }
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           renderItem={({ item }) => (
             <RideCard
               ride={item}
-              actionLabel={isDriver ? undefined : 'Request Ride'}
-              onAction={isDriver ? undefined : handleRequestRide}
+              actionLabel={isDriverMode ? undefined : 'Request Ride'}
+              onAction={isDriverMode ? undefined : handleRequestRide}
             />
           )}
           ListEmptyComponent={
             <Text style={styles.empty}>
-              {isDriver ? 'No rides posted yet.' : 'No rides available right now.'}
+              {isDriverMode ? 'No rides posted yet.' : 'No rides available right now.'}
             </Text>
           }
         />
@@ -120,7 +138,7 @@ export default function RidesScreen() {
     </View>
   );
 }
-// will be refactored later
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -166,5 +184,29 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     fontSize: FONT_SIZES.sm,
     fontWeight: '600',
+  },
+  driverBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
+  },
+  driverBannerText: {
+    flex: 1,
+    gap: 2,
+  },
+  driverBannerTitle: {
+    fontSize: FONT_SIZES.sm,
+    fontWeight: '700',
+    color: COLORS.primary,
+  },
+  driverBannerDesc: {
+    fontSize: FONT_SIZES.sm - 1,
+    color: COLORS.textSecondary,
   },
 });

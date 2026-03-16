@@ -1,3 +1,4 @@
+import ModeSelectorModal from '@/components/mode/ModeSelectorModal';
 import { ProfileProvider } from '@/context/ProfileProvider';
 import { useProfile } from '@/hooks/ProfileContextHook';
 import { Stack, router, useSegments } from 'expo-router';
@@ -32,12 +33,15 @@ function StackNavigation() {
   }, [loading, session, profile]);
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="index" />
-      <Stack.Screen name="(auth)" />
-      <Stack.Screen name="(onboarding)" />
-      <Stack.Screen name="(tabs)" />
-    </Stack>
+    <>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(onboarding)" />
+        <Stack.Screen name="(tabs)" />
+      </Stack>
+      <ModeSelectorModal />
+    </>
   );
 }
 

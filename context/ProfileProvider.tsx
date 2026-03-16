@@ -1,8 +1,11 @@
-import { useReducer, useEffect, ReactNode } from 'react';
-import { ProfileContext } from './ProfileContext';
-import { Session } from '@supabase/supabase-js';
-import { DriverProfile, Profile } from '@/types/Profiles';
 import { supabase } from '@/lib/supabase';
+import { DriverProfile, Profile } from '@/types/Profiles';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Session } from '@supabase/supabase-js';
+import { ReactNode, useCallback, useEffect, useReducer, useState } from 'react';
+import { ActiveMode, ProfileContext } from './ProfileContext';
+// Key used in AsyncStorage to persist the active mode across app restarts
+const ACTIVE_MODE_KEY = 'campus_carpool_active_mode';
 
 interface ProfileState {
   profile: Profile | null;
@@ -60,6 +63,20 @@ function profileReducer(state: ProfileState, action: ProfileAction): ProfileStat
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(profileReducer, initialState);
 
+  const [activeMode, setActiveModeState] = useState<ActiveMode>('student');
+  const [showModeSelector, setShowModeSelector] = useState<boolean>(false);
+
+  // Persist + apply mode
+  const setActiveMode = useCallback(async (mode: ActiveMode) => {
+    setActiveModeState(mode);
+    setShowModeSelector(false);
+    await AsyncStorage.setItem(ACTIVE_MODE_KEY, mode);
+  }, []);
+
+  const dismissModeSelector = useCallback(() => {
+    setShowModeSelector(false);
+  }, []);
+
   const fetchProfile = async (userId: string) => {
     console.log('Fetching profile for userId:', userId);
 
@@ -77,7 +94,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         console.log('Setting profile:', profileData);
         dispatch({ type: 'SET_PROFILE', payload: profileData });
       }
-      // Fetch driver profile
+
       const { data: driverData, error: driverError } = await supabase
         .from('driver_profiles')
         .select('*')
@@ -98,6 +115,29 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
+
+  // On startup: load persisted mode + show selector
+  useEffect(() => {
+    if (state.loading) return;
+    const isOnboarded =
+      !!state.profile?.full_name && !!state.profile?.university_name && !!state.profile?.phone;
+    if (!isOnboarded || !state.session) return;
+
+    (async () => {
+      const storedMode = await AsyncStorage.getItem(ACTIVE_MODE_KEY);
+      const hasDriverProfile = !!state.driverProfile;
+
+      if (storedMode === 'driver' || storedMode === 'student') {
+        const resolvedMode: ActiveMode =
+          storedMode === 'driver' && !hasDriverProfile ? 'student' : storedMode;
+        setActiveModeState(resolvedMode);
+      } else {
+        setActiveModeState('student');
+      }
+
+      setShowModeSelector(true);
+    })();
+  }, [state.loading, state.session?.user?.id]);
 
   useEffect(() => {
     // profile fetched
@@ -121,6 +161,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         await fetchProfile(session.user.id);
       } else {
         dispatch({ type: 'RESET' });
+        setShowModeSelector(false);
       }
     });
 
@@ -135,7 +176,11 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         session: state.session,
         loading: state.loading,
         isDriver: !!state.driverProfile,
+        activeMode,
+        showModeSelector,
         dispatch,
+        setActiveMode,
+        dismissModeSelector,
       }}
     >
       {children}
