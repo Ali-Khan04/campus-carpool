@@ -60,10 +60,18 @@ export default function LocationPickerModal({ visible, onClose, onConfirm, mode 
         `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5&countrycodes=pk`,
         { headers: { 'User-Agent': 'CampusCarpool/1.0' } }
       );
+      // Fix Nominatim sometimes returns "Unexpected character: <" JSON parse crash
+      const contentType = res.headers.get('content-type') ?? '';
+      if (!res.ok || !contentType.includes('application/json')) {
+        console.warn('Nominatim returned non-JSON response, status:', res.status);
+        setSearchResults([]);
+        return;
+      }
       const data = await res.json();
       setSearchResults(data);
     } catch (e) {
       console.error('Search error:', e);
+      setSearchResults([]);
     } finally {
       setSearching(false);
     }

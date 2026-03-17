@@ -1,4 +1,5 @@
 import SwitchModeButton from '@/components/mode/SwitchModeButton';
+import PendingRequestsModal from '@/components/rides/PendingRequestsModal';
 import { COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
 import { useProfile } from '@/hooks/ProfileContextHook';
 import { supabase } from '@/lib/supabase';
@@ -68,11 +69,11 @@ function DriverDashboard({ userId }: { userId: string }) {
   const [activeRide, setActiveRide] = useState<Ride | null>(null);
   const [pendingCount, setPendingCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const fetch = async () => {
     setLoading(true);
 
-    // Get active ride
     const { data: rideData } = await supabase
       .from('rides')
       .select('*')
@@ -84,15 +85,21 @@ function DriverDashboard({ userId }: { userId: string }) {
 
     setActiveRide(rideData ?? null);
 
-    // Count pending requests
-    if (rideData) {
+    // count pending requests across ALL of driver's rides, not just active one
+    // so the count is accurate even if activeRide is null
+    // because pending requests can exist for future rides that haven't gone active yet
+    const { data: allRides } = await supabase.from('rides').select('id').eq('driver_id', userId);
+
+    if (allRides && allRides.length > 0) {
+      const rideIds = allRides.map((r) => r.id);
       const { count } = await supabase
         .from('ride_requests')
         .select('id', { count: 'exact', head: true })
-        .eq('ride_id', rideData.id)
+        .in('ride_id', rideIds)
         .eq('status', 'pending');
-
       setPendingCount(count ?? 0);
+    } else {
+      setPendingCount(0);
     }
 
     setLoading(false);
@@ -109,10 +116,11 @@ function DriverDashboard({ userId }: { userId: string }) {
 
   return (
     <View style={styles.dashContainer}>
-      <Pressable style={styles.statCard} onPress={() => router.push('/(tabs)/rides')}>
+      <Pressable style={styles.statCard} onPress={() => setModalVisible(true)}>
         <Ionicons name="people-outline" size={28} color={COLORS.primary} />
         <Text style={styles.statNumber}>{pendingCount}</Text>
         <Text style={styles.statLabel}>Pending Requests</Text>
+        <Text style={styles.statHint}>Tap to review</Text>
       </Pressable>
 
       <Text style={styles.sectionTitle}>Your Next Ride</Text>
@@ -133,6 +141,15 @@ function DriverDashboard({ userId }: { userId: string }) {
           </Pressable>
         </View>
       )}
+      <PendingRequestsModal
+        driverId={userId}
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        onChanged={() => {
+          // refresh dashboard counts after driver accepts/declines
+          fetch();
+        }}
+      />
     </View>
   );
 }
@@ -313,4 +330,9 @@ const styles = StyleSheet.create({
     borderRadius: 99,
   },
   badgeText: { fontSize: FONT_SIZES.sm, fontWeight: '700' },
+  statHint: {
+    fontSize: FONT_SIZES.sm - 1,
+    color: COLORS.primary,
+    fontWeight: '500',
+  },
 });

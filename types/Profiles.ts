@@ -46,3 +46,6 @@ export interface RideRequest {
   created_at?: string;
   meetup_label?: string;
 }
+export interface RideRequestWithStudent extends RideRequest {
+  student_name?: string;
+}
