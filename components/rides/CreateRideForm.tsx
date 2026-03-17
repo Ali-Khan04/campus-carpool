@@ -56,6 +56,21 @@ export default function CreateRideForm({ onRideCreated }: Props) {
     setLocationLabel(destination.lat, destination.lng, destination.label);*/
 
     setLoading(true);
+    const { data: existingRide } = await supabase
+      .from('rides')
+      .select('id')
+      .eq('driver_id', session.user.id)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    if (existingRide) {
+      Alert.alert(
+        'Active Ride Exists',
+        'You already have an active ride! Complete or cancel it before posting a new one.'
+      );
+      setLoading(false);
+      return;
+    }
     const { error } = await supabase.from('rides').insert({
       driver_id: session.user.id,
       pickup_lat: pickup.lat,

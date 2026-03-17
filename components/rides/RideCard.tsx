@@ -8,6 +8,7 @@ interface Props {
   actionLabel?: string;
   onAction?: (ride: Ride) => void;
   disabled?: boolean;
+  alreadyRequested?: boolean;
 }
 /*
 const formatCoordinates = (lat: number, lng: number) => `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
@@ -33,7 +34,13 @@ const reverseGeocode = async (lat: number, lng: number) => {
   return label;
 };*/
 
-export default function RideCard({ ride, actionLabel, onAction, disabled }: Props) {
+export default function RideCard({
+  ride,
+  actionLabel,
+  onAction,
+  disabled,
+  alreadyRequested,
+}: Props) {
   const departure = new Date(ride.departure_time).toLocaleString();
 
   // Read from shared cache at render time
@@ -121,9 +128,9 @@ export default function RideCard({ ride, actionLabel, onAction, disabled }: Prop
 
       {actionLabel && onAction && (
         <Pressable
-          style={[styles.button, disabled && styles.buttonDisabled]}
-          onPress={() => onAction(ride)}
-          disabled={disabled}
+          style={[styles.button, (disabled || alreadyRequested) && styles.buttonDisabled]}
+          onPress={() => !alreadyRequested && onAction(ride)}
+          disabled={disabled || alreadyRequested}
         >
           <Text style={styles.buttonText}>{actionLabel}</Text>
         </Pressable>

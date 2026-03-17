@@ -10,6 +10,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Pressable,
   RefreshControl,
@@ -28,21 +29,47 @@ export default function RidesScreen() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedRide, setSelectedRide] = useState<Ride | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  // track which rides the student has already requested, so we can disable the button
+  const [requestedRideIds, setRequestedRideIds] = useState<Set<string>>(new Set());
+  // block further requests from student if they already have an accepted ride
+  const [hasAcceptedRequest, setHasAcceptedRequest] = useState(false);
+  const [hasActiveRide, setHasActiveRide] = useState(false);
 
   const fetchRides = async () => {
     setLoading(true);
     let query = supabase.from('rides').select('*').order('departure_time', { ascending: true });
 
     if (isDriverMode) {
+      // Drivers see only their own rides; students see all active rides
       query = query.eq('driver_id', session!.user.id);
     } else {
-      query = query.eq('status', 'active').gt('seats_available', 0);
+      query = query
+        .eq('status', 'active')
+        .gt('seats_available', 0)
+        .neq('driver_id', session!.user.id);
     }
 
     const { data, error } = await query;
     setLoading(false);
+    if (!error && data) {
+      setRides(data as Ride[]);
+      // stop drivers from posting multiple active rides
+      if (isDriverMode) {
+        setHasActiveRide(data.some((r) => r.status === 'active'));
+      }
+    }
+    if (!isDriverMode && session?.user?.id) {
+      const { data: myRequests } = await supabase
+        .from('ride_requests')
+        .select('ride_id, status')
+        .eq('student_id', session.user.id)
+        .in('status', ['pending', 'accepted']);
 
-    if (!error && data) setRides(data as Ride[]);
+      if (myRequests) {
+        setRequestedRideIds(new Set(myRequests.map((r) => r.ride_id)));
+        setHasAcceptedRequest(myRequests.some((r) => r.status === 'accepted'));
+      }
+    }
   };
 
   const onRefresh = async () => {
@@ -58,6 +85,13 @@ export default function RidesScreen() {
   );
 
   const handleRequestRide = (ride: Ride) => {
+    if (hasAcceptedRequest) {
+      Alert.alert(
+        'Request Blocked',
+        'You already have an accepted ride. You cannot request another until it is completed or cancelled.'
+      );
+      return;
+    }
     setSelectedRide(ride);
     setModalVisible(true);
   };
@@ -82,11 +116,14 @@ export default function RidesScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>{isDriverMode ? 'My Rides' : 'Available Rides'}</Text>
-        {isDriverMode && (
-          <Pressable style={styles.createBtn} onPress={() => setShowCreateForm(true)}>
-            <Text style={styles.createBtnText}>+ New Ride</Text>
-          </Pressable>
-        )}
+        {isDriverMode &&
+          (hasActiveRide ? (
+            <Text style={styles.activeRideText}>Cancel current ride to post a new one</Text>
+          ) : (
+            <Pressable style={styles.createBtn} onPress={() => setShowCreateForm(true)}>
+              <Text style={styles.createBtnText}>+ New Ride</Text>
+            </Pressable>
+          ))}
       </View>
 
       {loading && !refreshing ? (
@@ -113,12 +150,12 @@ export default function RidesScreen() {
               </Pressable>
             ) : null
           }
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           renderItem={({ item }) => (
             <RideCard
               ride={item}
               actionLabel={isDriverMode ? undefined : 'Request Ride'}
               onAction={isDriverMode ? undefined : handleRequestRide}
+              alreadyRequested={!isDriverMode && requestedRideIds.has(item.id)}
             />
           )}
           ListEmptyComponent={
@@ -126,6 +163,7 @@ export default function RidesScreen() {
               {isDriverMode ? 'No rides posted yet.' : 'No rides available right now.'}
             </Text>
           }
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         />
       )}
 
@@ -169,6 +207,7 @@ const styles = StyleSheet.create({
   },
   list: {
     padding: SPACING.md,
+    gap: SPACING.sm,
   },
   empty: {
     textAlign: 'center',
@@ -208,5 +247,10 @@ const styles = StyleSheet.create({
   driverBannerDesc: {
     fontSize: FONT_SIZES.sm - 1,
     color: COLORS.textSecondary,
+  },
+  activeRideText: {
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.textSecondary,
+    fontStyle: 'italic',
   },
 });
