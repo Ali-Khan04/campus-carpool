@@ -49,3 +49,10 @@ export interface RideRequest {
 export interface RideRequestWithStudent extends RideRequest {
   student_name?: string;
 }
+
+export interface DriverLocation {
+  driver_id: string;
+  latitude: number;
+  longitude: number;
+  updated_at: string;
+}

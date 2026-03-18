@@ -1,7 +1,7 @@
-import { AppState, Platform } from 'react-native';
-import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient, processLock } from '@supabase/supabase-js';
+import { AppState, Platform } from 'react-native';
+import 'react-native-url-polyfill/auto';
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.EXPO_PUBLIC_SUPABASE_KEY!;
@@ -25,6 +25,7 @@ if (Platform.OS !== 'web') {
   AppState.addEventListener('change', (state) => {
     if (state === 'active') {
       supabase.auth.startAutoRefresh();
+      supabase.realtime.connect();
     } else {
       supabase.auth.stopAutoRefresh();
     }

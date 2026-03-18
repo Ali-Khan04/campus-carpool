@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { Ride, RideRequest } from '@/types/Profiles';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -70,6 +70,7 @@ function DriverDashboard({ userId }: { userId: string }) {
   const [pendingCount, setPendingCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   const fetch = async () => {
     setLoading(true);
@@ -111,6 +112,108 @@ function DriverDashboard({ userId }: { userId: string }) {
     }, [])
   );
 
+  // subscribe to changes in ride_requests for this driver's active ride to keep pending count updated in real-time
+  useEffect(() => {
+    if (!activeRide) return;
+
+    const channel = supabase
+      .channel(`driver-requests-${activeRide.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'ride_requests',
+          filter: `ride_id=eq.${activeRide.id}`,
+        },
+        () => {
+          // re-fetch counts whenever any request changes for this ride
+          fetch();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [activeRide?.id]);
+  useEffect(() => {
+    if (!userId) return;
+
+    const channel = supabase
+      .channel(`driver-all-requests-${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'ride_requests',
+        },
+        () => {
+          // re-fetch everything when any new request is inserted
+          fetch();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId]);
+
+  // cancel ride
+  const handleCancelRide = () => {
+    if (!activeRide) return;
+    Alert.alert(
+      'Cancel Ride',
+      'This will cancel your ride and reject all pending requests. Are you sure?',
+      [
+        { text: 'No', style: 'cancel' },
+        {
+          text: 'Yes',
+          style: 'destructive',
+          onPress: async () => {
+            setCancelling(true);
+            await supabase
+              .from('ride_requests')
+              .update({ status: 'rejected' })
+              .eq('ride_id', activeRide.id)
+              .eq('status', 'pending');
+
+            await supabase.from('rides').update({ status: 'cancelled' }).eq('id', activeRide.id);
+
+            setCancelling(false);
+            fetch();
+          },
+        },
+      ]
+    );
+  };
+
+  //complete ride
+  const handleCompleteRide = () => {
+    if (!activeRide) return;
+    Alert.alert('Complete Ride', 'Mark this ride as completed?', [
+      { text: 'No', style: 'cancel' },
+      {
+        text: 'Yes',
+        onPress: async () => {
+          setCancelling(true);
+          await supabase.from('rides').update({ status: 'completed' }).eq('id', activeRide.id);
+          // when ride is completed, all accepted requests should be marked as completed too not cancelled
+          await supabase
+            .from('ride_requests')
+            .update({ status: 'cancelled' })
+            .eq('ride_id', activeRide.id)
+            .eq('status', 'accepted');
+
+          setCancelling(false);
+          fetch();
+        },
+      },
+    ]);
+  };
+
   if (loading)
     return <ActivityIndicator color={COLORS.primary} style={{ marginTop: SPACING.xl }} />;
 
@@ -132,6 +235,25 @@ function DriverDashboard({ userId }: { userId: string }) {
           <Pressable style={styles.actionBtn} onPress={() => router.push('/(tabs)/rides')}>
             <Text style={styles.actionBtnText}>Manage Ride →</Text>
           </Pressable>
+          {/* Cancell and Complete Button  */}
+          <View style={styles.rideActions}>
+            <Pressable
+              style={[styles.completeBtn, cancelling && styles.btnDisabled]}
+              onPress={handleCompleteRide}
+              disabled={cancelling}
+            >
+              <Ionicons name="checkmark-circle-outline" size={16} color="#16A34A" />
+              <Text style={styles.completeBtnText}>Complete</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.cancelBtn, cancelling && styles.btnDisabled]}
+              onPress={handleCancelRide}
+              disabled={cancelling}
+            >
+              <Ionicons name="close-circle-outline" size={16} color="#DC2626" />
+              <Text style={styles.cancelBtnText}>Cancel Ride</Text>
+            </Pressable>
+          </View>
         </View>
       ) : (
         <View style={styles.emptyCard}>
@@ -160,6 +282,7 @@ function StudentDashboard({ userId }: { userId: string }) {
   const [activeRequest, setActiveRequest] = useState<RideRequest | null>(null);
   const [ride, setRide] = useState<Ride | null>(null);
   const [loading, setLoading] = useState(true);
+  const [cancelling, setCancelling] = useState(false);
 
   const fetch = async () => {
     setLoading(true);
@@ -182,6 +305,8 @@ function StudentDashboard({ userId }: { userId: string }) {
         .eq('id', reqData.ride_id)
         .maybeSingle();
       setRide(rideData ?? null);
+    } else {
+      setRide(null);
     }
 
     setLoading(false);
@@ -192,6 +317,58 @@ function StudentDashboard({ userId }: { userId: string }) {
       fetch();
     }, [])
   );
+
+  useEffect(() => {
+    if (!activeRequest) return;
+
+    const channel = supabase
+      .channel(`student-request-${activeRequest.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'ride_requests',
+          filter: `id=eq.${activeRequest.id}`,
+        },
+        (payload) => {
+          // update request status from realtime payload directly
+          setActiveRequest((prev) => (prev ? { ...prev, ...payload.new } : prev));
+          // if request just got accepted or rejected, do a full re-fetch
+          if (payload.new.status === 'accepted' || payload.new.status === 'rejected') {
+            fetch();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [activeRequest?.id]);
+
+  // student cancels their own pending request
+  const handleCancelRequest = () => {
+    if (!activeRequest) return;
+    Alert.alert('Cancel Request', 'Are you sure you want to cancel your ride request?', [
+      { text: 'No', style: 'cancel' },
+      {
+        text: 'Yes',
+        style: 'destructive',
+        onPress: async () => {
+          setCancelling(true);
+          const { error } = await supabase
+            .from('ride_requests')
+            .update({ status: 'cancelled' })
+            .eq('id', activeRequest.id);
+          console.log('cancel error:', error);
+          console.log('cancel done, fetching...');
+          setCancelling(false);
+          fetch();
+        },
+      },
+    ]);
+  };
 
   if (loading)
     return <ActivityIndicator color={COLORS.primary} style={{ marginTop: SPACING.xl }} />;
@@ -206,8 +383,27 @@ function StudentDashboard({ userId }: { userId: string }) {
           <Row label="Departure" value={new Date(ride.departure_time).toLocaleString()} />
           <Row label="Seats requested" value={String(activeRequest.seats_requested)} />
           {activeRequest.status === 'accepted' && (
-            <Pressable style={styles.actionBtn} onPress={() => router.push('/(tabs)/map')}>
+            <Pressable
+              style={styles.actionBtn}
+              onPress={() =>
+                router.push({
+                  pathname: '/(tabs)/map',
+                  params: { driverId: ride.driver_id },
+                })
+              }
+            >
               <Text style={styles.actionBtnText}>Track Driver on Map →</Text>
+            </Pressable>
+          )}
+          {/*cancel button */}
+          {activeRequest.status === 'pending' && (
+            <Pressable
+              style={[styles.cancelBtn, cancelling && styles.btnDisabled]}
+              onPress={handleCancelRequest}
+              disabled={cancelling}
+            >
+              <Ionicons name="close-circle-outline" size={16} color="#DC2626" />
+              <Text style={styles.cancelBtnText}>Cancel Request</Text>
             </Pressable>
           )}
         </View>
@@ -334,5 +530,45 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.sm - 1,
     color: COLORS.primary,
     fontWeight: '500',
+  },
+  rideActions: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+    marginTop: SPACING.xs,
+  },
+  completeBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    padding: SPACING.sm,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#16A34A',
+  },
+  completeBtnText: {
+    color: '#16A34A',
+    fontWeight: '600',
+    fontSize: FONT_SIZES.sm,
+  },
+  cancelBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    padding: SPACING.sm,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#DC2626',
+  },
+  cancelBtnText: {
+    color: '#DC2626',
+    fontWeight: '600',
+    fontSize: FONT_SIZES.sm,
+  },
+  btnDisabled: {
+    opacity: 0.5,
   },
 });

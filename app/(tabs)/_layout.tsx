@@ -47,6 +47,15 @@ export default function TabsNavigation() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="history"
+        options={{
+          title: 'History',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="time-outline" size={size} color={color} />
+          ),
+        }}
+      />
       <Tabs.Screen name="profiles/studentProfile" options={{ href: null }} />
       <Tabs.Screen name="profiles/driverProfile" options={{ href: null }} />
     </Tabs>

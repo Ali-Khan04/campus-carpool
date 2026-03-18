@@ -56,7 +56,7 @@ export default function CreateRideForm({ onRideCreated }: Props) {
     setLocationLabel(destination.lat, destination.lng, destination.label);*/
 
     setLoading(true);
-  /*  const { data: existingRide } = await supabase
+    /*  const { data: existingRide } = await supabase
       .from('rides')
       .select('id')
       .eq('driver_id', session.user.id)
