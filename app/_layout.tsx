@@ -8,20 +8,19 @@ function StackNavigation() {
   const segments = useSegments();
   const { session, profile, loading } = useProfile();
 
-  // Handle redirects based on auth/profile state
   useEffect(() => {
-    // Wait until ProfileProvider has finished fetching
     if (loading) return;
 
-    const inAuth = segments[0] === '(auth)';
-    const inOnboarding = segments[0] === '(onboarding)';
-    const inTabs = segments[0] === '(tabs)';
+    const inAuth = segments[0] === '(auth)'; //User is on a public auth screen (sign-in, sign-up, forgot-password, reset-password)
+    const inOnboarding = segments[0] === '(onboarding)'; //User is completing their profile for the first time
+    const inTabs = segments[0] === '(tabs)'; //User is inside the main app
+    const inResetPassword = segments[1] === 'reset-password'; //Temporarily has a session from OTP verify — don't redirect away mid-flow
 
     if (!session) {
       if (!inAuth) router.replace('/(auth)/sign-in');
       return;
     }
-
+    if (inResetPassword) return;
     const hasRole = !!profile?.role;
     const isComplete = !!profile?.full_name && !!profile?.university_name && !!profile?.phone;
 
