@@ -75,7 +75,7 @@ export default function ForgotPassword() {
                 },
               ]}
               value={otp}
-              placeholder="000000"
+              placeholder="00000000"
               placeholderTextColor={COLORS.textSecondary}
               keyboardType="number-pad"
               maxLength={8}

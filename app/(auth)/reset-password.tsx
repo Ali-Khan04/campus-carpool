@@ -112,7 +112,7 @@ export default function ResetPassword() {
           onChangeText={setPassword}
         />
         <Pressable style={authStyles.eyeIcon} onPress={() => setShowPassword((v) => !v)}>
-          <Text style={authStyles.eyeIconText}>{showPassword ? '🙈' : '👁️'}</Text>
+          <Text style={authStyles.eyeIconText}>{showPassword ? 'Hide' : 'Show'}</Text>
         </Pressable>
       </View>
 
@@ -152,7 +152,7 @@ export default function ResetPassword() {
           onChangeText={setConfirm}
         />
         <Pressable style={authStyles.eyeIcon} onPress={() => setShowConfirm((v) => !v)}>
-          <Text style={authStyles.eyeIconText}>{showConfirm ? '🙈' : '👁️'}</Text>
+          <Text style={authStyles.eyeIconText}>{showConfirm ? 'Hide' : 'Show'}</Text>
         </Pressable>
         {mismatch && (
           <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>

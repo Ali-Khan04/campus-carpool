@@ -106,7 +106,7 @@ export default function AuthForm({
           onChangeText={(text) => onChange('password', text)}
         />
         <Pressable style={authStyles.eyeIcon} onPress={() => setShowPassword((v) => !v)}>
-          <Text style={authStyles.eyeIconText}>{showPassword ? '🙈' : '👁️'}</Text>
+          <Text style={authStyles.eyeIconText}>{showPassword ? 'Hide' : 'Show'}</Text>
         </Pressable>
       </View>
 

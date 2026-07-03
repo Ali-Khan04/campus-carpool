@@ -1,8 +1,9 @@
 {
   "expo": {
-    "name": "CarPoolingApp",
+    "name": "RideLink",
     "slug": "CarPoolingApp",
     "version": "1.0.0",
+    "icon": "./assets/icon.png",
     "orientation": "portrait",
     "scheme": "carpoolingapp",
     "userInterfaceStyle": "automatic",
@@ -12,7 +13,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE"
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false

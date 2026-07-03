@@ -44,7 +44,10 @@ export const authStyles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   eyeIconText: {
-    fontSize: 18,
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.primary,
+    letterSpacing: 0.3,
   },
   strengthContainer: {
     marginTop: -8,
