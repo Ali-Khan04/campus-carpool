@@ -10,6 +10,7 @@ import MapView, {
   PROVIDER_DEFAULT,
   Region,
   UrlTile,
+  Polyline,
 } from 'react-native-maps';
 
 interface ExtraMarker {
@@ -23,10 +24,12 @@ interface Props {
   onPress?: (e: MapPressEvent) => void;
   extraMarkers?: ExtraMarker[];
   showUserLocation?: boolean;
+  routeCoordinates?: { latitude: number; longitude: number }[];
+  onLocationUpdate?: (coords: LocationCoords) => void;
 }
 
 export default forwardRef<MapView, Props>(function BaseMap(
-  { onPress, extraMarkers = [], showUserLocation = true },
+  { onPress, extraMarkers = [], showUserLocation = true, routeCoordinates = [], onLocationUpdate },
   ref
 ) {
   const [location, setLocation] = useState<LocationCoords | null>(null); // to store user's live location
@@ -60,6 +63,7 @@ export default forwardRef<MapView, Props>(function BaseMap(
         },
         (loc) => {
           setLocation(loc.coords);
+          onLocationUpdate?.(loc.coords);
           setRegion((prev) => {
             if (
               prev.latitude === DEFAULT_REGION.latitude &&
@@ -127,6 +131,9 @@ export default forwardRef<MapView, Props>(function BaseMap(
               pinColor={m.pinColor}
             />
           )
+        )}
+        {routeCoordinates.length > 0 && (
+          <Polyline coordinates={routeCoordinates} strokeWidth={4} strokeColor="#3B82F6" />
         )}
       </MapView>
       <Text style={styles.attribution}>© OpenStreetMap contributors</Text>

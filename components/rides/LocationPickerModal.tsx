@@ -1,6 +1,6 @@
 import { COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -40,48 +40,155 @@ interface SearchResult {
 
 type ActivePin = 'pickup' | 'destination';
 
+function formatLabel(item: { display_name: string; address?: any }): string {
+  const a = item.address;
+  if (!a) return item.display_name.split(',')[0];
+
+  return (
+    a.amenity ||
+    a.shop ||
+    a.building ||
+    (a.house_number && a.road ? `${a.house_number} ${a.road}` : a.road) ||
+    a.neighbourhood ||
+    a.suburb ||
+    a.road ||
+    item.display_name.split(',')[0]
+  );
+}
+function decodePolyline(encoded: string): { latitude: number; longitude: number }[] {
+  const points: { latitude: number; longitude: number }[] = [];
+  let index = 0,
+    lat = 0,
+    lng = 0;
+
+  while (index < encoded.length) {
+    let shift = 0,
+      result = 0,
+      byte;
+    do {
+      byte = encoded.charCodeAt(index++) - 63;
+      result |= (byte & 0x1f) << shift;
+      shift += 5;
+    } while (byte >= 0x20);
+    lat += result & 1 ? ~(result >> 1) : result >> 1;
+
+    shift = 0;
+    result = 0;
+    do {
+      byte = encoded.charCodeAt(index++) - 63;
+      result |= (byte & 0x1f) << shift;
+      shift += 5;
+    } while (byte >= 0x20);
+    lng += result & 1 ? ~(result >> 1) : result >> 1;
+
+    points.push({ latitude: lat / 1e5, longitude: lng / 1e5 });
+  }
+  return points;
+}
 export default function LocationPickerModal({ visible, onClose, onConfirm, mode = 'full' }: Props) {
   const [activePin, setActivePin] = useState<ActivePin>('pickup');
   const [pickup, setPickup] = useState<PickedLocation | null>(null);
   const [destination, setDestination] = useState<PickedLocation | null>(null);
-
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
+  const [routeCoords, setRouteCoords] = useState<{ latitude: number; longitude: number }[]>([]);
+  const [routeInfo, setRouteInfo] = useState<{ distanceKm: number; durationMin: number } | null>(
+    null
+  );
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const mapRef = useRef<any>(null);
+  const hasPrefilledRef = useRef(false);
 
-  const searchLocation = async (query: string) => {
-    if (query.length < 3) {
-      setSearchResults([]);
+  useEffect(() => {
+    if (mode !== 'full' || !pickup || !destination) {
+      setRouteCoords([]);
+      setRouteInfo(null);
       return;
     }
-    setSearching(true);
-    try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5&countrycodes=pk`,
-        { headers: { 'User-Agent': 'CampusCarpool/1.0' } }
-      );
-      // Fix Nominatim sometimes returns "Unexpected character: <" JSON parse crash
-      const contentType = res.headers.get('content-type') ?? '';
-      if (!res.ok || !contentType.includes('application/json')) {
-        console.warn('Nominatim returned non-JSON response, status:', res.status);
-        setSearchResults([]);
-        return;
+
+    const fetchRoute = async () => {
+      try {
+        const res = await fetch(
+          `https://router.project-osrm.org/route/v1/driving/${pickup.lng},${pickup.lat};${destination.lng},${destination.lat}?overview=full&geometries=polyline`
+        );
+        const data = await res.json();
+        if (data.routes?.[0]) {
+          const coords = decodePolyline(data.routes[0].geometry);
+          setRouteCoords(coords);
+          setRouteInfo({
+            distanceKm: data.routes[0].distance / 1000,
+            durationMin: data.routes[0].duration / 60,
+          });
+
+          // Zoom out to fit the entire route with padding to show both markers and route clearly
+          setTimeout(() => {
+            mapRef.current?.fitToCoordinates(coords, {
+              edgePadding: { top: 80, right: 60, bottom: 250, left: 60 },
+              animated: true,
+            });
+          }, 300);
+        }
+      } catch (e) {
+        console.error('Route fetch error:', e);
+        setRouteCoords([]);
+        setRouteInfo(null);
       }
-      const data = await res.json();
-      setSearchResults(data);
-    } catch (e) {
-      console.error('Search error:', e);
+    };
+
+    fetchRoute();
+  }, [pickup, destination, mode]);
+  const searchLocation = (query: string) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    if (query.length < 3) {
       setSearchResults([]);
-    } finally {
       setSearching(false);
+      return;
     }
+
+    setSearching(true);
+
+    debounceRef.current = setTimeout(async () => {
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
+
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+            query
+          )}&format=json&limit=5&countrycodes=pk&addressdetails=1&accept-language=en`,
+          {
+            headers: { 'User-Agent': 'CampusCarpool/1.0' },
+            signal: controller.signal,
+          }
+        );
+        const contentType = res.headers.get('content-type') ?? '';
+        if (!res.ok || !contentType.includes('application/json')) {
+          console.warn('Nominatim returned non-JSON response, status:', res.status);
+          setSearchResults([]);
+          return;
+        }
+        const data = await res.json();
+        setSearchResults(data);
+      } catch (e: any) {
+        if (e.name !== 'AbortError') {
+          console.error('Search error:', e);
+          setSearchResults([]);
+        }
+      } finally {
+        setSearching(false);
+      }
+    }, 500);
   };
 
   const handleSelectResult = (result: SearchResult) => {
     const loc: PickedLocation = {
       lat: parseFloat(result.lat),
       lng: parseFloat(result.lon),
-      label: result.display_name.split(',').slice(0, 2).join(','),
+      label: formatLabel(result),
     };
 
     if (activePin === 'pickup') {
@@ -99,13 +206,13 @@ export default function LocationPickerModal({ visible, onClose, onConfirm, mode 
 
     // Reverse geocode using Nominatim api
     fetch(
-      `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
+      `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1&accept-language=en`,
       { headers: { 'User-Agent': 'CampusCarpool/1.0' } }
     )
       .then((r) => r.json())
       .then((data) => {
         const label = data.display_name
-          ? data.display_name.split(',').slice(0, 2).join(',')
+          ? formatLabel(data)
           : `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
 
         const loc: PickedLocation = { lat: latitude, lng: longitude, label };
@@ -146,13 +253,31 @@ export default function LocationPickerModal({ visible, onClose, onConfirm, mode 
     }
     onClose();
   };
+  const handleLiveLocation = async (coords: { latitude: number; longitude: number }) => {
+    if (mode !== 'full' || pickup || hasPrefilledRef.current) return;
+    hasPrefilledRef.current = true; // only ever prefill once per modal session
 
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${coords.latitude}&lon=${coords.longitude}&format=json&addressdetails=1&accept-language=en`,
+        { headers: { 'User-Agent': 'CampusCarpool/1.0' } }
+      );
+      const data = await res.json();
+      const label = data.display_name ? formatLabel(data) : 'Current Location';
+
+      setPickup({ lat: coords.latitude, lng: coords.longitude, label });
+      setActivePin('destination');
+    } catch (e) {
+      console.error('Prefill location error:', e);
+    }
+  };
   const handleClose = () => {
     setPickup(null);
     setDestination(null);
     setSearchQuery('');
     setSearchResults([]);
     setActivePin('pickup');
+    hasPrefilledRef.current = false;
     onClose();
   };
 
@@ -269,7 +394,10 @@ export default function LocationPickerModal({ visible, onClose, onConfirm, mode 
           )}
 
           <BaseMap
+            ref={mapRef}
             onPress={handleMapPress}
+            routeCoordinates={routeCoords}
+            onLocationUpdate={handleLiveLocation}
             extraMarkers={[
               ...(pickup
                 ? [
