@@ -1,17 +1,16 @@
-import { DEFAULT_REGION, DEFAULT_ZOOM } from '@/constants/mapConfig';
+import { DEFAULT_REGION, DEFAULT_ZOOM_LEVEL, MAP_STYLE } from '@/constants/mapConfig';
 import { styles } from '@/styles/mapStyles';
 import { LocationCoords } from '@/types/Location';
 import * as Location from 'expo-location';
-import React, { forwardRef, useEffect, useRef, useState } from 'react';
-import { Alert, Text, View } from 'react-native';
-import MapView, {
-  MapPressEvent,
+import {
+  Camera,
+  GeoJSONSource,
+  Layer,
+  Map as MLMap,
   Marker,
-  PROVIDER_DEFAULT,
-  Region,
-  UrlTile,
-  Polyline,
-} from 'react-native-maps';
+} from '@maplibre/maplibre-react-native';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { Alert, Text, View } from 'react-native';
 
 interface ExtraMarker {
   coordinate: { latitude: number; longitude: number };
@@ -21,64 +20,77 @@ interface ExtraMarker {
 }
 
 interface Props {
-  onPress?: (e: MapPressEvent) => void;
+  onPress?: (e: any) => void;
   extraMarkers?: ExtraMarker[];
   showUserLocation?: boolean;
   routeCoordinates?: { latitude: number; longitude: number }[];
   onLocationUpdate?: (coords: LocationCoords) => void;
 }
 
-export default forwardRef<MapView, Props>(function BaseMap(
+export default forwardRef<any, Props>(function BaseMap(
   { onPress, extraMarkers = [], showUserLocation = true, routeCoordinates = [], onLocationUpdate },
   ref
 ) {
-  const [location, setLocation] = useState<LocationCoords | null>(null); // to store user's live location
-  const [region, setRegion] = useState<Region>(DEFAULT_REGION); // to which and how much region to show on maps
-  const internalRef = useRef<MapView>(null);
-  const mapRef = (ref as React.RefObject<MapView>) ?? internalRef;
+  const [location, setLocation] = useState<LocationCoords | null>(null);
+  const cameraRef = useRef<any>(null);
+  const hasCenteredRef = useRef(false);
+
+  // Keeps the same imperative API LocationPickerModal.tsx already calls,
+  // so that file needs zero edits.
+  useImperativeHandle(ref, () => ({
+    fitToCoordinates: (
+      coords: { latitude: number; longitude: number }[],
+      options?: {
+        edgePadding?: { top: number; right: number; bottom: number; left: number };
+        animated?: boolean;
+      }
+    ) => {
+      if (!coords.length) return;
+      const lats = coords.map((c) => c.latitude);
+      const lngs = coords.map((c) => c.longitude);
+      const bounds: [number, number, number, number] = [
+        Math.min(...lngs),
+        Math.min(...lats),
+        Math.max(...lngs),
+        Math.max(...lats),
+      ];
+      cameraRef.current?.fitBounds(
+        bounds,
+        options?.edgePadding ?? { top: 40, right: 40, bottom: 40, left: 40 },
+        options?.animated === false ? 0 : 1000
+      );
+    },
+  }));
 
   useEffect(() => {
     let subscription: Location.LocationSubscription | null = null;
 
     (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync(); //ask for permissions
+      const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert('Permission denied', 'Location permission is required');
         return;
       }
-      // to track live postion , check again
       const servicesEnabled = await Location.hasServicesEnabledAsync();
       if (!servicesEnabled) {
         Alert.alert('Location Services Off', 'Please enable location services');
         return;
       }
-      //let userLocation = await Location.getCurrentPositionAsync({}); //get user's current location
-      // watch for live updates on user's location
 
       subscription = await Location.watchPositionAsync(
-        {
-          accuracy: Location.Accuracy.High,
-          timeInterval: 2000, //update every 2 seconds
-          distanceInterval: 2, // or when user moves 2 meters
-        },
+        { accuracy: Location.Accuracy.High, timeInterval: 2000, distanceInterval: 2 },
         (loc) => {
           setLocation(loc.coords);
           onLocationUpdate?.(loc.coords);
-          setRegion((prev) => {
-            if (
-              prev.latitude === DEFAULT_REGION.latitude &&
-              prev.longitude === DEFAULT_REGION.longitude
-            ) {
-              const newRegion = {
-                latitude: loc.coords.latitude,
-                longitude: loc.coords.longitude,
-                ...DEFAULT_ZOOM,
-              };
-              mapRef.current?.animateToRegion(newRegion, 800);
-              return newRegion;
-            }
-            return prev;
-          });
+
+          if (!hasCenteredRef.current) {
+            hasCenteredRef.current = true;
+            cameraRef.current?.flyTo({
+              center: [loc.coords.longitude, loc.coords.latitude],
+              zoom: DEFAULT_ZOOM_LEVEL,
+              duration: 800,
+            });
+          }
         }
       );
     })();
@@ -88,54 +100,58 @@ export default forwardRef<MapView, Props>(function BaseMap(
     };
   }, []);
 
+  const routeGeoJSON = {
+    type: 'Feature' as const,
+    properties: {},
+    geometry: {
+      type: 'LineString' as const,
+      coordinates: routeCoordinates.map((c) => [c.longitude, c.latitude]),
+    },
+  };
+
   return (
     <View style={styles.container}>
-      <MapView
-        ref={mapRef}
-        provider={PROVIDER_DEFAULT} // use the device native map provider
+      <MLMap
         style={styles.map}
-        initialRegion={region} // state variable region for only displaying intially
-        showsUserLocation={showUserLocation}
-        showsMyLocationButton={showUserLocation}
-        onPress={onPress}
+        mapStyle={MAP_STYLE}
+        onPress={(e: any) => {
+          const lngLat = e?.nativeEvent?.lngLat;
+          if (!lngLat) return;
+          // normalized back to react-native-maps' old shape so callers don't change
+          onPress?.({ nativeEvent: { coordinate: { latitude: lngLat[1], longitude: lngLat[0] } } });
+        }}
       >
-        <UrlTile // for custom map styling
-          urlTemplate="https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png"
-          maximumZ={19}
-          minimumZ={1}
-          flipY={false}
-          tileSize={1024}
+        <Camera
+          ref={cameraRef}
+          initialViewState={{
+            center: [DEFAULT_REGION.longitude, DEFAULT_REGION.latitude],
+            zoom: DEFAULT_ZOOM_LEVEL,
+          }}
         />
 
-        {location && ( // if user location is true then show marker at user's current location
-          <Marker
-            coordinate={{
-              latitude: location.latitude,
-              longitude: location.longitude,
-            }}
-            title="You are here"
-            description="Your current location"
-          />
+        {location && showUserLocation && (
+          <Marker lngLat={[location.longitude, location.latitude]}>
+            <View style={styles.userDot} />
+          </Marker>
         )}
 
-        {extraMarkers.map(
-          (
-            m,
-            i // Any extra markers passed in (pickup, destination, etc)
-          ) => (
-            <Marker
-              key={i}
-              coordinate={m.coordinate}
-              title={m.title}
-              description={m.description}
-              pinColor={m.pinColor}
-            />
-          )
-        )}
+        {extraMarkers.map((m, i) => (
+          <Marker key={i} lngLat={[m.coordinate.longitude, m.coordinate.latitude]}>
+            <View style={[styles.pin, { backgroundColor: m.pinColor ?? '#3B82F6' }]} />
+          </Marker>
+        ))}
+
         {routeCoordinates.length > 0 && (
-          <Polyline coordinates={routeCoordinates} strokeWidth={4} strokeColor="#3B82F6" />
+          <GeoJSONSource id="routeSource" data={routeGeoJSON}>
+            <Layer
+              id="routeLine"
+              type="line"
+              layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+              paint={{ 'line-color': '#3B82F6', 'line-width': 4 }}
+            />
+          </GeoJSONSource>
         )}
-      </MapView>
+      </MLMap>
       <Text style={styles.attribution}>© OpenStreetMap contributors</Text>
     </View>
   );

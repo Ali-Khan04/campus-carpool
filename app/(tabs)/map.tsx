@@ -7,7 +7,6 @@ import * as Location from 'expo-location';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import MapView from 'react-native-maps';
 
 export default function MapScreen() {
   const { activeMode, session } = useProfile();
@@ -17,7 +16,7 @@ export default function MapScreen() {
   const { driverId } = useLocalSearchParams<{ driverId?: string }>();
   // driver's last known location fetched via realtime, shown as a marker for the student
   const [driverLocation, setDriverLocation] = useState<DriverLocation | null>(null);
-  const mapRef = useRef<MapView>(null);
+  const mapRef = useRef<any>(null);
   // if driver mode then publish location to db table every 4 seconds
   //currently this runs only when map screen is open
   //later we will run this in background using expo TaskManager
